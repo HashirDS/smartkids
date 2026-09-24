@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, UserPlus, GraduationCap, Users } from 'lucide-react';
+import { Mail, Lock, User, Users } from 'lucide-react';
+import Logo from './Logo';
 import { apiFetch } from '../api';
 
 const saveSession = (data) => {
@@ -188,7 +189,7 @@ const LoginSignup = () => {
             <div className="w-full max-w-lg bg-white p-8 rounded-3xl shadow-2xl border-t-8 border-indigo-500">
 
                 <div className="flex flex-col items-center mb-8">
-                    <GraduationCap className="w-12 h-12 text-indigo-600 mb-2" />
+                    <Logo className="h-16 w-16 mb-3" />
                     <h2 className="text-3xl font-extrabold text-gray-900">{formTitle}</h2>
                     <p className="text-sm text-gray-500 mt-1">{formSubtitle}</p>
                 </div>

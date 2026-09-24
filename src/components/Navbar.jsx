@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BarChart3, Home, Menu, X, Shield, LogOut } from 'lucide-react';
+import { BarChart3, Menu, X, Shield, LogOut } from 'lucide-react';
+import Logo from './Logo';
 
 const clearSession = () => {
     localStorage.removeItem('user');
@@ -35,8 +36,8 @@ const Navbar = () => {
                     to="/"
                     className="text-white text-2xl font-bold flex items-center gap-2 hover:opacity-80 transition-opacity"
                 >
-                    <Home className="w-6 h-6" />
-                    <span className="hidden sm:block">Smart Animated Tutor</span>
+                    <Logo className="h-10 w-10" />
+                    <span className="hidden sm:block">Smart Tutor</span>
                     <span className="sm:hidden">Tutor</span>
                 </Link>
 

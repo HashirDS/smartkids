@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Logo from './Logo';
 // Import icons
 import { 
   Home, Mic, Palette, Shapes, Binary, Apple, Pencil, Bot, 
-  Menu, X, BrainCircuit, UserCircle, LogOut, ChevronDown, BookOpen,
+  Menu, X, UserCircle, LogOut, ChevronDown, BookOpen,
   Contact, BarChart3
 } from 'lucide-react';
 
@@ -89,7 +90,7 @@ const ChildNavbar = ({ onContentSelect, activeContent }) => {
           className="text-white font-bold text-xl sm:text-2xl cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2"
           aria-label="Go to Home"
         >
-            <BrainCircuit size={24}/>
+            <Logo className="h-10 w-10" />
             Smart Tutor
         </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrainCircuit, Sparkles, Star, Rocket, BookOpen } from 'lucide-react';
+import { Sparkles, Star, Rocket, BookOpen } from 'lucide-react';
+import Logo from './Logo';
 
 const WelcomeMessage = () => {
   const [animationStage, setAnimationStage] = useState('hidden'); // hidden -> circle-expand -> full -> circle-collapse -> hidden
@@ -61,8 +62,8 @@ const WelcomeMessage = () => {
               
               {/* Animated Icon */}
               <div className="relative mb-6">
-                <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto shadow-lg backdrop-blur-sm border border-white/30 animate-float">
-                  <BrainCircuit className="w-10 h-10 text-white" />
+                <div className="mx-auto mb-1 flex h-20 w-20 items-center justify-center rounded-3xl bg-white p-1 shadow-lg animate-float">
+                  <Logo className="h-full w-full" />
                 </div>
                 <div className="absolute -top-2 -right-2">
                   <Sparkles className="w-6 h-6 text-yellow-300 animate-spin-slow" />
