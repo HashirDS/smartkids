@@ -1,10 +1,13 @@
 const fromEnv = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+const envPointsAtThisMachine = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(fromEnv);
 
 // Local dev always talks to the Flask server on this machine.
-// On Vercel the site and the API are the same address, unless VITE_API_URL is set.
+// The live site calls its own API. A localhost address in the host settings is ignored there.
 export const API_URL = import.meta.env.DEV
   ? "http://127.0.0.1:5000"
-  : fromEnv;
+  : envPointsAtThisMachine
+    ? ""
+    : fromEnv;
 
 export function apiFetch(input, options = {}) {
   let url = input;
