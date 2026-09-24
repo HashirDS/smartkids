@@ -1,9 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 // Each section after the hero gets its own pure color and a wavy top edge.
 const sectionColors = {
   who: '#FFD23F',
   what: '#FFF9EC',
+  demo: '#8B5CF6',
   benefits: '#1E88FF',
   how: '#FFF9EC',
   activities: '#2EC26A',
@@ -131,6 +133,81 @@ export const WhatSection = () => (
           <p className="mt-2 font-semibold leading-relaxed text-[#4A5578]">{text}</p>
         </Card>
       ))}
+    </div>
+  </Section>
+);
+
+/* ---------- Free 3D classroom demo ---------- */
+
+const ClassroomPreview = () => (
+  <svg viewBox="0 0 480 320" className="h-auto w-full" role="img" aria-label="3D classroom preview">
+    <defs>
+      <linearGradient id="demo-wall" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#FFD9B8" />
+        <stop offset="1" stopColor="#F4B78E" />
+      </linearGradient>
+      <linearGradient id="demo-floor" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#E8C9A6" />
+        <stop offset="1" stopColor="#D2A77C" />
+      </linearGradient>
+    </defs>
+    <rect width="480" height="320" rx="24" fill="url(#demo-wall)" />
+    <path d="M0 236h480v60a24 24 0 0 1-24 24H24A24 24 0 0 1 0 296Z" fill="url(#demo-floor)" />
+    {/* Board */}
+    <rect x="130" y="46" width="220" height="130" rx="10" fill="#8A5A34" />
+    <rect x="140" y="56" width="200" height="110" rx="6" fill="#23583F" />
+    <text x="240" y="104" textAnchor="middle" fontFamily="Fredoka, Nunito, sans-serif" fontWeight="700" fontSize="30" fill="#fff">A B C</text>
+    <text x="240" y="140" textAnchor="middle" fontFamily="Fredoka, Nunito, sans-serif" fontWeight="600" fontSize="18" fill="#FFD23F">Hello, friends!</text>
+    {/* Window */}
+    <rect x="378" y="56" width="74" height="96" rx="8" fill="#9ED8FF" stroke="#fff" strokeWidth="6" />
+    <path d="M415 56v96M378 104h74" stroke="#fff" strokeWidth="5" />
+    {/* Clock */}
+    <circle cx="72" cy="78" r="24" fill="#fff" stroke="#1E2A55" strokeWidth="4" />
+    <path d="M72 78V64M72 78l10 6" stroke="#1E2A55" strokeWidth="4" strokeLinecap="round" />
+    {/* Teacher */}
+    <g transform="translate(92 150)">
+      <rect x="-16" y="40" width="32" height="54" rx="12" fill="#3D55C9" />
+      <circle cx="0" cy="22" r="22" fill="#FFD6B8" />
+      <path d="M-24 20c0-22 48-22 48 0 0-6-10-18-24-18S-24 14-24 20Z" fill="#3B2A22" />
+      <circle cx="-8" cy="24" r="3" fill="#1E2A55" />
+      <circle cx="8" cy="24" r="3" fill="#1E2A55" />
+      <path d="M-6 32q6 6 12 0" fill="none" stroke="#1E2A55" strokeWidth="2.5" strokeLinecap="round" />
+    </g>
+    {/* Desks */}
+    <rect x="200" y="226" width="110" height="16" rx="6" fill="#C9763F" />
+    <rect x="330" y="226" width="110" height="16" rx="6" fill="#C9763F" />
+    <path d="M210 242v48M300 242v48M340 242v48M430 242v48" stroke="#8A5A34" strokeWidth="8" strokeLinecap="round" />
+    {/* Play button */}
+    <circle cx="240" cy="200" r="34" fill="#FF4F5E" stroke="#fff" strokeWidth="5" />
+    <path d="M230 184v32l26-16Z" fill="#fff" />
+  </svg>
+);
+
+export const DemoSection = () => (
+  <Section id="demo">
+    <div className="grid items-center gap-10 lg:grid-cols-2">
+      <div className="text-center lg:text-left">
+        <h2 className="landing-display landing-outline text-4xl font-bold leading-tight text-white sm:text-5xl">
+          Try our 3D classroom free
+        </h2>
+        <p className="mt-4 text-lg font-semibold leading-relaxed text-white">
+          Step into a real 3D classroom and meet a talking 3D teacher. Type any question and watch the
+          teacher answer out loud. No sign-up needed for the 3-minute demo.
+        </p>
+        <Link
+          to="/try-classroom"
+          className="landing-display mt-7 inline-block rounded-full bg-[#FFD23F] px-6 py-2 text-lg font-semibold text-[#1E2A55] shadow-[0_5px_0_#C99A00] transition hover:-translate-y-0.5"
+        >
+          Start free demo
+        </Link>
+      </div>
+      <Link
+        to="/try-classroom"
+        className="block overflow-hidden rounded-3xl bg-white p-2 shadow-[0_8px_0_rgba(30,42,85,0.25)] transition hover:-translate-y-1"
+        aria-label="Start the free 3D classroom demo"
+      >
+        <ClassroomPreview />
+      </Link>
     </div>
   </Section>
 );

@@ -60,19 +60,26 @@ const MithuHero = () => {
       return;
     }
     synth.cancel();
-    const utter = new SpeechSynthesisUtterance(`${letter}. ${letter} is for ${word}!`);
+    // Two parts so the letter is read by its name ("ay"), then a short pause: "A ... for Apple".
     const voice = pickVoice();
-    if (voice) utter.voice = voice;
-    utter.rate = 0.85;
-    utter.pitch = 1.5;
-    utter.onstart = () => {
+    const makeUtterance = (text) => {
+      const u = new SpeechSynthesisUtterance(text);
+      if (voice) u.voice = voice;
+      u.rate = 0.7;
+      u.pitch = 1.35;
+      u.onerror = () => setTalking(false);
+      return u;
+    };
+    const letterPart = makeUtterance(letter);
+    const wordPart = makeUtterance(`for ${word}`);
+    letterPart.onstart = () => {
       clearTimeout(talkTimer.current);
       setTalking(true);
     };
-    utter.onend = () => setTalking(false);
-    utter.onerror = () => setTalking(false);
-    pulseTalk(2500); // fallback in case speech events don't fire
-    synth.speak(utter);
+    wordPart.onend = () => setTalking(false);
+    pulseTalk(3500); // fallback in case speech events don't fire
+    synth.speak(letterPart);
+    synth.speak(wordPart);
   };
 
   const [letter, word, emoji] = ABC[index];
@@ -104,7 +111,7 @@ const MithuHero = () => {
             >
               <p className="landing-display text-3xl font-bold leading-none text-[#1E2A55] sm:text-4xl">
                 <span style={{ color: TILE_COLORS[index % TILE_COLORS.length] }}>{letter}</span>
-                <span className="text-xl sm:text-2xl"> is for </span>
+                <span className="text-xl sm:text-2xl"> for </span>
                 {word} <span aria-hidden="true">{emoji}</span>
               </p>
               <span className="absolute -bottom-3 right-16 h-6 w-6 rotate-45 rounded-sm bg-white" />

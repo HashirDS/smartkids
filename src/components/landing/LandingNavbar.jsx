@@ -9,6 +9,7 @@ const NAV_THEMES = {
   top: { bg: '#FFD23F', light: false },
   who: { bg: '#1E88FF', light: true },
   what: { bg: '#FF4F8B', light: true },
+  demo: { bg: '#FFD23F', light: false },
   benefits: { bg: '#FFD23F', light: false },
   how: { bg: '#2EC26A', light: true },
   activities: { bg: '#8B5CF6', light: true },
