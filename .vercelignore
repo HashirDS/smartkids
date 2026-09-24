@@ -1,0 +1,8 @@
+public/models/rain.glb
+_run_vercel.cjs
+_path_hook.cjs
+accounts/
+.env
+backend/.env
+**/__pycache__/
+*.pyc

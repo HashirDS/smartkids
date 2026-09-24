@@ -1,5 +1,10 @@
 {
   "framework": "vite",
+  "functions": {
+    "api/index.py": {
+      "excludeFiles": "{public,src,node_modules,dist,.git}/**"
+    }
+  },
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [

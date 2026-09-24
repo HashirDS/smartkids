@@ -1,4 +1,3 @@
-gunicorn
 flask
 flask-cors
 pymongo
@@ -7,8 +6,4 @@ python-dotenv
 validators
 requests
 groq
-replicate
-google-generativeai
-google-genai
-azure-cognitiveservices-speech
 gtts

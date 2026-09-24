@@ -24,18 +24,18 @@ from bson.objectid import ObjectId
 from werkzeug.security import check_password_hash
 # --- NEW IMPORTS FOR AI & TTS ---
 import json
-from google import genai
-from google.genai.errors import APIError
-import azure.cognitiveservices.speech as speechsdk
 import os
-import replicate
 import base64
 import io
-from gtts import gTTS  # Make sure to import this
-
-import google.generativeai as genai
 from flask import Flask, request, jsonify
 import os
+
+# Heavy SDKs stay optional so the Vercel function stays under the size limit.
+# Browser speech covers pronunciation when these packages are not installed.
+speechsdk = None
+replicate = None
+gTTS = None
+genai = None
 # --- NEW IMPORTS FOR SPEECH SYSTEM ---
 import tempfile
 import time
@@ -494,8 +494,6 @@ def mark_item_complete():
 HUGGINGFACE_API_TOKEN = os.getenv("HUGGINGFACE_API_TOKEN")
 HF_MODEL_URL = "https://router.huggingface.co/hf-inference/models/Hashir124/phi-2"
 
-import os
-import replicate  # <--- New Import
 from flask import Flask, request, jsonify
 
 REPLICATE_MODEL_ID = "hashirds1/ashir:6b0013266a78c6c8890f033dbce522a9e6477cc8eb5af4ca2e2fb4b5d638be06"
@@ -568,8 +566,8 @@ def ask_ai():
     # ---------------------------------------------------------
     try:
         print("🧠 Sending question to Replicate (hashirds/ashir)...")
-        
-        output = replicate.run(
+        import replicate as replicate_client
+        output = replicate_client.run(
             REPLICATE_MODEL_ID,
             input={
                 "prompt": f"{system_instruction_text}\nUser: {question}\nTeacher:",
@@ -964,8 +962,8 @@ def generate_audio():
         if not text:
             return jsonify({"error": "No text provided"}), 400
 
-        # Generate audio using Google Text-to-Speech (Free, no API key needed)
-        tts = gTTS(text=text, lang='en', slow=False)
+        from gtts import gTTS as GoogleTTS
+        tts = GoogleTTS(text=text, lang='en', slow=False)
         
         # Save to memory buffer
         mp3_fp = io.BytesIO()
@@ -987,12 +985,11 @@ def generate_audio():
 
 # ---------------- POEM GENERATION (LLAMA-3 via GROQ) ----------------
 
-from groq import Groq
-import os
 from flask import request, jsonify
 
-# Initialize Groq client (already present in your project)
-groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+if GROQ_API_KEY and groq_client is None:
+    from groq import Groq
+    groq_client = Groq(api_key=GROQ_API_KEY)
 
 @app.route('/generate-poem', methods=['POST'])
 def generate_poem():
@@ -1128,12 +1125,6 @@ def get_speech_analytics(user_id):
 # --- NEW CHATBOT ENDPOINT FOR LEARNING ASSISTANT ---
 # -----------------------------------------------------
 
-import os
-from groq import Groq  # Make sure to install this: pip install groq
-import google.generativeai as genai
-
-# ... existing imports ...
-
 @app.route('/api/chat', methods=['POST'])
 def chat_assistant():
     """
@@ -1177,6 +1168,7 @@ def chat_assistant():
         groq_api_key = os.getenv("GROQ_API_KEY")
         if groq_api_key:
             try:
+                from groq import Groq
                 client = Groq(api_key=groq_api_key)
                 completion = client.chat.completions.create(
                     model="llama3-8b-8192",  # Fast and smart
@@ -1201,6 +1193,7 @@ def chat_assistant():
         gemini_api_key = os.getenv("GEMINI_API_KEY")
         if gemini_api_key:
             try:
+                import google.generativeai as genai
                 genai.configure(api_key=gemini_api_key)
                 model = genai.GenerativeModel('gemini-1.5-flash') # Use 1.5 Flash (faster/stable)
                 response = model.generate_content(

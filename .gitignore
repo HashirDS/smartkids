@@ -27,3 +27,4 @@ model/
 .env 
 backend/.env 
 accounts/ 
+.vercel
