@@ -1,10 +1,10 @@
 const fromEnv = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
 // Local dev always talks to the Flask server on this machine.
-// A production build uses VITE_API_URL from the host environment.
+// On Vercel the site and the API are the same address, unless VITE_API_URL is set.
 export const API_URL = import.meta.env.DEV
   ? "http://127.0.0.1:5000"
-  : fromEnv || "https://smarttutor.azurewebsites.net";
+  : fromEnv;
 
 export function apiFetch(input, options = {}) {
   let url = input;

@@ -1,8 +1,14 @@
 {
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/(.*)", "destination": "/api/index" },
+    { "source": "/login", "destination": "/api/index" },
+    { "source": "/register", "destination": "/api/index" },
+    { "source": "/analyze_speech", "destination": "/api/index" },
+    { "source": "/generate-audio", "destination": "/api/index" },
+    { "source": "/generate-poem", "destination": "/api/index" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
