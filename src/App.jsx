@@ -19,8 +19,8 @@ import NumLesson from './components/NumLesson.jsx';
 import ColorsLesson from './components/ColorsLesson.jsx';
 import AdminDashboard from "./components/AdminDashboard.jsx";
 import MyProgress from "./components/MyProgress.jsx";
-import ChatBotIcon from './components/ChatBotIcon.jsx';
-import ChatBotWindow from './components/ChatBotWindow.jsx';
+import WhatsAppButton from './components/WhatsAppButton.jsx';
+import ClassroomDemo from './components/ClassroomDemo.jsx';
 
 function ProtectedRoute({ children, allow }) {
   const isLoggedIn = localStorage.getItem("user");
@@ -33,7 +33,6 @@ function ProtectedRoute({ children, allow }) {
 
 function App() {
   const [showWelcome, setShowWelcome] = useState(true);
-  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -46,14 +45,15 @@ function App() {
     <Router>
       {showWelcome && <WelcomeMessage />}
 
-      {/* --- CHATBOT APPEARS ON ALL PAGES --- */}
-      <ChatBotIcon onOpen={() => setIsChatOpen(true)} />
-      {isChatOpen && <ChatBotWindow onClose={() => setIsChatOpen(false)} />}
+      {/* WhatsApp contact button on all pages */}
+      <WhatsAppButton />
 
       <Routes>
         {/* Homepage & Auth */}
         <Route path="/" element={<Homepage />} />
         <Route path="/login" element={<LoginSignup />} />
+        {/* Free 3D classroom demo (no login needed) */}
+        <Route path="/try-classroom" element={<ClassroomDemo />} />
 
         {/* Dashboards */}
         <Route

@@ -5,6 +5,7 @@ import MithuHero from './landing/MithuHero';
 import {
   AudienceSection,
   WhatSection,
+  DemoSection,
   BenefitsSection,
   HowItWorksSection,
   ActivitiesSection,
@@ -21,6 +22,7 @@ const Homepage = () => {
         <MithuHero />
         <AudienceSection />
         <WhatSection />
+        <DemoSection />
         <BenefitsSection />
         <HowItWorksSection />
         <ActivitiesSection />
