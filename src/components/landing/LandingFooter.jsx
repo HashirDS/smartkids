@@ -68,6 +68,7 @@ const LandingFooter = () => {
             <Link to="/privacy" className="hover:text-white hover:underline">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-white hover:underline">Terms &amp; Conditions</Link>
             <Link to="/cookies" className="hover:text-white hover:underline">Cookie Policy</Link>
+            <Link to="/child-safety" className="hover:text-white hover:underline">Child Safety</Link>
           </nav>
         </div>
       </div>

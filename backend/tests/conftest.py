@@ -48,7 +48,7 @@ def make_user(client):
     def _make(email, user_type="child", first="Test", last="User"):
         r = client.post("/api/register", json={
             "first_name": first, "last_name": last, "username": email,
-            "password": PASSWORD, "user_type": user_type,
+            "password": PASSWORD, "user_type": user_type, "parent_consent": True,
         })
         assert r.status_code in (201, 202), r.get_json()
         if user_type == "teacher":

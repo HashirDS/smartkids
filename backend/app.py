@@ -24,7 +24,7 @@ from bson.objectid import ObjectId
 from pymongo import ReturnDocument
 from xml.sax.saxutils import escape as xml_escape
 from schools import (register_school_routes, can_view_student, visible_student_filter,
-                     visible_student_ids, assign_to_default, migrate_existing_users)
+                     visible_student_ids, assign_to_default, migrate_existing_users, oid)
 from parents import CATEGORY_LABELS, register_parent_routes
 from rewards import record_activity, register_reward_routes
 import hmac
@@ -60,10 +60,12 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 from monitoring import init_sentry, system_status
+from child_safety import AI_SAFETY_RULES, filter_ai_response, names_for_session, redact_for_ai
 SENTRY_ON = init_sentry()
 
 # Initialize the Flask application
 app = Flask(__name__)
+app.after_request(filter_ai_response)
 
 @app.route("/")
 def home():
@@ -368,6 +370,9 @@ def register_user():
         return jsonify({"message": "Account type must be child or teacher"}), 400
     if len(password) < 6 or len(password) > 128:
         return jsonify({"message": "Password must be 6 to 128 characters"}), 400
+    # Children aged 3-6 cannot agree to terms themselves (COPPA / GDPR Art. 8).
+    if user_type == "child" and data.get("parent_consent") is not True:
+        return jsonify({"message": "A parent or guardian must create a child's account and tick the consent box."}), 400
     if not email(username):
         return jsonify({"message": "Invalid email format"}), 400
     if db.users.find_one({"username": username}):
@@ -377,6 +382,9 @@ def register_user():
         "first_name": first_name, "last_name": last_name, "username": username,
         "password": hashed_password, "user_type": user_type, "created_at": datetime.utcnow()
     }
+    if user_type == "child":
+        user["consent_at"] = datetime.utcnow()
+        user["consent_source"] = "parent_signup"
     pending_teacher = user_type == "teacher" and TEACHER_APPROVAL_REQUIRED
     if pending_teacher:
         user["restricted"] = True
@@ -676,7 +684,7 @@ def is_response_valid(user_prompt, response_text):
 
 @app.route('/api/ai', methods=['GET'])
 def ask_ai():
-    question = request.args.get('question', '').strip()[:500]
+    question = redact_for_ai(request.args.get('question', '').strip()[:500])
     if not question:
         return jsonify({"error": "Missing 'question' parameter"}), 400
     # Open to visitors for the free classroom demo, so cap how often one visitor can call the AI.
@@ -698,7 +706,7 @@ def ask_ai():
     Example:
     User: "Teach me 12 months"
     Teacher: "Here they are! January, February, March, April, May, June, July, August, September, October, November, December! 📅"
-    """
+    """ + AI_SAFETY_RULES
 
     # ---------------------------------------------------------
     # 1. TRY REPLICATE (Custom Model)
@@ -999,7 +1007,8 @@ def analyze_speech():
         print(f"🎤 Transcribing with Deepgram for expected: {expected_text}")
 
         import requests
-        url = "https://api.deepgram.com/v1/listen?model=nova-2&language=en&punctuate=false&smart_format=false"
+        # mip_opt_out: children's recordings are never kept or used to train Deepgram's models.
+        url = "https://api.deepgram.com/v1/listen?model=nova-2&language=en&punctuate=false&smart_format=false&mip_opt_out=true"
 
         headers = {
             "Authorization": f"Token {DEEPGRAM_API_KEY}",
@@ -1210,7 +1219,7 @@ def generate_poem():
         return denied
     try:
         data = json_body()
-        topic = clean_str(data.get('topic'), 100)
+        topic = redact_for_ai(clean_str(data.get('topic'), 100))
 
         if not topic:
             return jsonify({"error": "No topic provided"}), 400
@@ -1229,7 +1238,7 @@ RULES:
 - NO emojis
 - NO explanations
 - ONLY the poem text
-"""
+""" + AI_SAFETY_RULES
 
         user_prompt = f"Write a poem about: {topic}"
 
@@ -1386,7 +1395,8 @@ def chat_assistant():
         return denied
     try:
         data = json_body()
-        user_message = (clean_str(data.get('message'), 500) or '')
+        user_message = redact_for_ai(clean_str(data.get('message'), 500) or '',
+                                     names_for_session(db, current_session(), oid))
         context = data.get('context') if isinstance(data.get('context'), dict) else {}
 
         if not user_message:
@@ -1416,7 +1426,7 @@ def chat_assistant():
         - Be super enthusiastic! Use emojis like 🌟, 🎨, 🚀, 🤖.
         - If asked about features, explain them simply.
         - If asked a general question (e.g., "What is A?"), give an educational answer ("A is for Apple! 🍎").
-        """
+        """ + AI_SAFETY_RULES
 
         # --- 2. PRIMARY: TRY GROQ (LLAMA 3) ---
         # This is the fastest and best model for chat
@@ -2179,7 +2189,7 @@ def generate_custom_ai_quiz():
         return denied
     try:
         data = json_body()
-        topic = clean_str(data.get('topic'), 80) or 'mixed'
+        topic = redact_for_ai(clean_str(data.get('topic'), 80) or 'mixed')
         difficulty = clean_str(data.get('difficulty'), 20) or 'Easy'
         if rate_limited(f"quizgen:{client_ip()}", 30, 600):
             return too_many_requests()
@@ -2291,6 +2301,8 @@ def admin_delete_user(user_id):
         db.progress.delete_one({"_id": ObjectId(user_id)})
         db.classes.update_many({"teacher_ids": str(user_id)}, {"$pull": {"teacher_ids": str(user_id)}})
         db.users.update_many({"child_ids": str(user_id)}, {"$pull": {"child_ids": str(user_id)}})
+        db.assessments.delete_many({"user_id": ObjectId(user_id)})
+        db.quiz_assignments.delete_many({"user_id": str(user_id)})
         db.sessions.delete_many({"user_id": str(user_id)})
 
         return jsonify({"message": "User deleted successfully"}), 200

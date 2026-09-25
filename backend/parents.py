@@ -8,11 +8,12 @@ A parent account is a `users` document with user_type "parent" and `child_ids`
 import hashlib
 import hmac
 import html
+import json
 import os
 from datetime import datetime, timedelta
 
 import requests
-from flask import jsonify, request
+from flask import Response, jsonify, request
 from validators import email as valid_email
 
 from rewards import rewards_for
@@ -93,6 +94,50 @@ def child_report(db, child, since=None):
 # ---------------------------------------------------------------------------
 # Weekly email
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Data rights: download and delete (COPPA / GDPR / UK Children's Code)
+# ---------------------------------------------------------------------------
+
+def export_child_data(db, child):
+    """Everything AI Tutor stores about one child, as plain JSON (no password)."""
+    cid = str(child["_id"])
+    account = {k: v for k, v in child.items() if k not in ("password", "_id", "quiz_history")}
+    progress = db.progress.find_one({"_id": child["_id"]}) or {}
+    progress.pop("_id", None)
+    cls = db.classes.find_one({"_id": oid((child.get("class_ids") or [None])[0])}) if child.get("class_ids") else None
+    school = db.schools.find_one({"_id": oid(child.get("school_id"))}) if child.get("school_id") else None
+    data = {
+        "exported_at": datetime.utcnow().isoformat() + "Z",
+        "about": "All data AI Tutor stores about this child. Passwords are never included.",
+        "child": account,
+        "class": {"name": (cls or {}).get("name"), "level": (cls or {}).get("level")},
+        "school": {"name": (school or {}).get("name"), "city": (school or {}).get("city")},
+        "progress": progress,
+        "quiz_history": child.get("quiz_history") or [],
+        "quizzes": [{k: v for k, v in q.items() if k not in ("_id", "user_id")}
+                    for q in db.assessments.find({"user_id": child["_id"]})],
+        "quiz_assignments": [{k: v for k, v in a.items() if k not in ("_id",)}
+                             for a in db.quiz_assignments.find({"user_id": cid})],
+        "rewards": rewards_for(db, cid),
+    }
+    return json.loads(json.dumps(data, default=str))
+
+
+def delete_child_data(db, child, by_role):
+    """Remove a child's account and all learning records. Keeps only an anonymous log line."""
+    cid = str(child["_id"])
+    counts = {
+        "progress": db.progress.delete_many({"_id": child["_id"]}).deleted_count,
+        "quizzes": db.assessments.delete_many({"user_id": child["_id"]}).deleted_count,
+        "quiz_assignments": db.quiz_assignments.delete_many({"user_id": cid}).deleted_count,
+        "sessions": db.sessions.delete_many({"user_id": cid}).deleted_count,
+    }
+    db.users.update_many({"child_ids": cid}, {"$pull": {"child_ids": cid}})
+    db.users.delete_one({"_id": child["_id"]})
+    db.deletion_log.insert_one({"at": datetime.utcnow(), "kind": "child", "by": by_role, "records": counts})
+    return counts
+
 
 def unsubscribe_token(parent_id):
     secret = os.getenv("CRON_SECRET") or ""
@@ -263,7 +308,7 @@ def register_parent_routes(app, core):
         }).inserted_id
         parent_details = {"name": f"{p_first} {p_last}".strip(), "email": p_email, "phone": p_phone}
         child_id, login = create_student(db(), core.bcrypt, cls, c_first, c_last, parent_details,
-                                         str(parent_id), extra={"joined_with_code": True})
+                                         str(parent_id), extra={"joined_with_code": True, "consent_source": "parent_join", "consent_at": datetime.utcnow()})
         db().users.update_one({"_id": parent_id}, {"$set": {"child_ids": [child_id]}})
         token = core.issue_token(str(parent_id), "parent")
         return jsonify({
@@ -307,7 +352,7 @@ def register_parent_routes(app, core):
         parent_details = {"name": f"{me.get('first_name', '')} {me.get('last_name', '')}".strip(),
                           "email": me.get("username", ""), "phone": me.get("phone", "")}
         child_id, login = create_student(db(), core.bcrypt, cls, c_first, c_last, parent_details,
-                                         session.get("user_id"), extra={"joined_with_code": True})
+                                         session.get("user_id"), extra={"joined_with_code": True, "consent_source": "parent_join", "consent_at": datetime.utcnow()})
         db().users.update_one({"_id": me["_id"]}, {"$addToSet": {"child_ids": child_id}})
         return jsonify({"message": "Child added.", "_id": child_id, "child_login": login,
                         **class_payload(cls, school)}), 201
@@ -340,6 +385,51 @@ def register_parent_routes(app, core):
         if update:
             db().users.update_one({"_id": oid(session.get("user_id"))}, {"$set": update})
         return jsonify({"message": "Saved."})
+
+    def my_child(session, child_id):
+        if not session or not can_view_student(db(), session, child_id):
+            return None
+        return db().users.find_one({"_id": oid(child_id), "user_type": "child"})
+
+    @app.route("/api/parent/children/<child_id>/export", methods=["GET"])
+    def parent_export_child(child_id):
+        session = parent_session()
+        child = my_child(session, child_id)
+        if not child:
+            return err("Child not found.", 404)
+        name = "".join(ch for ch in (child.get("first_name") or "child") if ch.isalnum()) or "child"
+        return Response(json.dumps(export_child_data(db(), child), indent=2, ensure_ascii=False),
+                        mimetype="application/json",
+                        headers={"Content-Disposition": f'attachment; filename="ai-tutor-{name}-data.json"',
+                                 "Cache-Control": "no-store"})
+
+    @app.route("/api/parent/children/<child_id>", methods=["DELETE"])
+    def parent_delete_child(child_id):
+        session = parent_session()
+        child = my_child(session, child_id)
+        if not child:
+            return err("Child not found.", 404)
+        if core.rate_limited(f"parent-delete:{session.get('user_id')}", 10, 3600):
+            return core.too_many_requests()
+        typed = (core.clean_str(core.json_body().get("confirm"), 60) or "").strip().lower()
+        if typed != (child.get("first_name") or "").strip().lower():
+            return err("Type your child's first name to confirm.")
+        delete_child_data(db(), child, "parent")
+        return jsonify({"message": "Your child's account and learning records were deleted."})
+
+    @app.route("/api/parent/account", methods=["DELETE"])
+    def parent_delete_account():
+        session = parent_session()
+        if not session:
+            return err("Unauthorized", 401)
+        if (core.clean_str(core.json_body().get("confirm"), 20) or "").strip().upper() != "DELETE":
+            return err('Type DELETE to confirm.')
+        me = db().users.find_one({"_id": oid(session.get("user_id"))}) or {}
+        db().users.delete_one({"_id": me.get("_id")})
+        db().sessions.delete_many({"user_id": session.get("user_id")})
+        db().deletion_log.insert_one({"at": datetime.utcnow(), "kind": "parent", "by": "parent",
+                                      "records": {"children_unlinked": len(me.get("child_ids") or [])}})
+        return jsonify({"message": "Your parent account was deleted. Your children's school accounts are not changed."})
 
     @app.route("/api/parent/unsubscribe", methods=["GET"])
     def parent_unsubscribe():
