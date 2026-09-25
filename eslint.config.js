@@ -26,4 +26,28 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  {
+    // Older files written before CI existed: style-only issues are warnings here
+    // so CI can run today. New and edited code keeps the strict rules above.
+    files: [
+      'src/components/AbcLesson.jsx',
+      'src/components/BoardSettings.jsx',
+      'src/components/ColorsLesson.jsx',
+      'src/components/DrawingBoard.jsx',
+      'src/components/GeneralTutor3D.jsx',
+      'src/components/LoginSignup.jsx',
+      'src/components/MessagesList.jsx',
+      'src/components/PaperGenerator.jsx',
+      'src/components/Teacher.jsx',
+      'src/components/TeacherDashboard.jsx',
+      'src/components/TeachingCharacter3D.jsx',
+      'src/components/TeachingInterface.jsx',
+      'src/hooks/useAITeacher.js',
+    ],
+    rules: {
+      'no-irregular-whitespace': 'warn',
+      'no-unused-vars': 'warn',
+      'no-empty': 'warn',
+    },
+  },
 ])

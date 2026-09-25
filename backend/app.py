@@ -88,7 +88,8 @@ if not MONGO_URI:
 else:
     try:
         client = MongoClient(MONGO_URI)
-        db = client.smart_tutor
+        # Staging/preview deploys set MONGO_DB_NAME to a separate database so tests never touch real data.
+        db = client[os.getenv("MONGO_DB_NAME", "smart_tutor")]
         print("Successfully connected to MongoDB.")
     except Exception as e:
         print(f"Error connecting to MongoDB: {e}")
@@ -1216,6 +1217,19 @@ RULES:
         return jsonify({
             "error": "Poem generation failed. Please try again."
         }), 500
+
+
+@app.route('/api/health', methods=['GET'])
+def health():
+    """Uptime check: 200 when the API and database respond, 503 otherwise."""
+    db_ok = False
+    if db is not None:
+        try:
+            db.command("ping")
+            db_ok = True
+        except Exception as e:
+            print(f"Health check DB ping failed: {e}")
+    return jsonify({"status": "ok" if db_ok else "degraded", "database": db_ok}), (200 if db_ok else 503)
 
 
 @app.route('/api/status', methods=['GET'])

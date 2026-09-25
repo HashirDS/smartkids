@@ -2,7 +2,7 @@
   "framework": "vite",
   "functions": {
     "api/index.py": {
-      "excludeFiles": "{public,src,node_modules,dist,.git}/**"
+      "excludeFiles": "{public,src,node_modules,dist,.git,.github,docs,backend/tests}/**"
     }
   },
   "buildCommand": "npm run build",
