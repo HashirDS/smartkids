@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Users } from 'lucide-react';
 import Logo from './Logo';
 import { apiFetch } from '../api';
@@ -70,6 +70,8 @@ const LoginSignup = () => {
             navigate('/admin-dashboard');
         } else if (userType === 'principal') {
             navigate('/school');
+        } else if (userType === 'parent') {
+            navigate('/parent');
         } else if (userType === 'teacher') {
             navigate('/teacher-dashboard');
         } else {
@@ -236,6 +238,13 @@ const LoginSignup = () => {
                         {loading ? 'Please wait...' : actionText}
                     </button>
                 </form>
+
+                {!isLogin && (
+                    <p className="mt-4 text-center text-sm text-gray-500">
+                        Parent with a class code from your school?{' '}
+                        <Link to="/join" className="text-indigo-600 font-semibold">Join here</Link>
+                    </p>
+                )}
 
                 <div className="mt-6 text-center text-sm">
                     {isLogin ? "New here?" : "Already have an account?"}{' '}

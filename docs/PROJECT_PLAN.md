@@ -75,12 +75,17 @@ Each module is built, tested (automated + clicked through), then pushed to the
 - **Every teacher/principal API is scoped** to their school/classes (security).
 - Existing users are kept: current students/teachers go into a "Default school" until moved.
 
-### M2 – Parents ⬜
-- Parent role, parent dashboard (child progress, badges, recent activity).
-- Staff "Add student" collects parent details; parent account created/linked automatically.
-- `/join` page: parent sign-up with class code; add another child later.
-- Weekly progress email every Sunday (Vercel Cron → `/api/cron/weekly-report`, email via Resend).
-- Admin and principal can view and edit parent details on every child.
+### M2 – Parents ✅
+- Parent role and `/parent` page: each child's class, teacher, stars, things learned, this week's
+  speaking tries and quizzes, recent quiz scores; parent can make a new password for their child.
+- Staff "Add student" with a parent email creates the parent's login (shown once) or links to their
+  existing parent account; changing the parent email moves the link.
+- `/join` page: parent signs up with the class code (or a `/join?code=…` link copied from the class card),
+  with a parent/guardian consent tick; "Add a child" later for siblings (up to 10).
+- Weekly email every Sunday 09:00 PKT (Vercel Cron → `/api/cron/weekly-report`, sent in batches via
+  Resend, at most once a week per parent, one-click unsubscribe). Without `RESEND_API_KEY` it only does a dry run.
+- Admin: Parents count, and the user list shows "Parent of …" / "Parent: …" links.
+  Principal/teacher see "Parent login" and "Joined with code" badges on each student.
 
 ### M3 – Languages: Urdu and Arabic ⬜
 - Language switch (English / اردو / العربية) for child, teacher, parent; right-to-left layout for Urdu and Arabic.
@@ -125,7 +130,8 @@ Mobile PWA/offline (after ~50 customers) · European languages.
 |---|---|---|
 | Staging database | Same MongoDB cluster, new database name | Preview env: `MONGO_DB_NAME=smart_tutor_staging` (+ `MONGO_URI`) |
 | Weekly emails | Create a Resend account, verify the sending domain (e.g. datixai.com) | `RESEND_API_KEY`, `EMAIL_FROM` |
-| Cron security | Any long random text | `CRON_SECRET` |
+| Cron security | Any long random text (also signs the unsubscribe links) | `CRON_SECRET` |
+| Email links | The live site address, e.g. `https://aitutor.example.com` (optional) | `PUBLIC_APP_URL` |
 | Error monitoring | Create a Sentry project (React + Flask) | `VITE_SENTRY_DSN`, `SENTRY_DSN` |
 | Analytics | Enable Web Analytics in the Vercel project | – |
 | Uptime | UptimeRobot monitor on `https://<site>/api/health` | – |
@@ -142,3 +148,4 @@ Features that need a key stay switched off until the key is added; nothing break
 | 2026-09-25 | Landing, security, SEO, legal, Flags | Landing redesign, app navbars, Flags lesson, security hardening, SEO, legal pages, welcome popup removed |
 | 2026-09-25 | M0 | Backend test suite (pytest + mongomock), GitHub Actions CI (lint, build, tests), MONGO_DB_NAME for a separate staging database, /api/health, fixed conditional React hooks in the teacher dashboard |
 | 2026-09-25 | M1 | Schools, classes (Preschool/Nursery/Prep/KG1) with class codes, principal role and dashboard, admin Schools page, teacher My Classes tab, staff add students with parent details (login shown once), move students, reset passwords, school-level lesson access, all teacher/principal APIs scoped to their own classes/school, existing users moved into a Default school |
+| 2026-09-25 | M2 | Parent role and dashboard, /join with class code and consent, sibling add, automatic parent logins from staff, weekly email via Resend + Vercel Cron with unsubscribe, admin parent links; fixed a visibility rule so a parent can only ever see their own children; role label moved from navbar into the ☰ menu |

@@ -19,6 +19,7 @@ const SECTION_IDS = Object.keys(NAV_THEMES);
 const dashboardFor = (userType) => {
   if (userType === 'admin') return '/admin-dashboard';
   if (userType === 'principal') return '/school';
+  if (userType === 'parent') return '/parent';
   if (userType === 'teacher') return '/teacher-dashboard';
   return '/child-dashboard';
 };
@@ -108,6 +109,15 @@ const LandingNavbar = () => {
                     {link.label}
                   </a>
                 ))}
+                {!isLoggedIn && (
+                  <Link
+                    to="/join"
+                    onClick={closeMenu}
+                    className="block rounded-2xl px-4 py-2 font-bold text-[#1E2A55] hover:bg-[#FFF1C7]"
+                  >
+                    Parents: join a class
+                  </Link>
+                )}
                 <div className="mx-3 my-2 border-t border-[#EEE9DD]" />
                 <Link
                   to={account.to}

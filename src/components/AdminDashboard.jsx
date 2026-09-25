@@ -194,6 +194,12 @@ const AdminDashboard = () => {
               {stats.teachers}
             </p>
           </div>
+          <div className="bg-white p-6 shadow rounded-xl text-center">
+            <h3>Parents</h3>
+            <p className="text-4xl font-bold text-pink-500">
+              {stats.parents ?? 0}
+            </p>
+          </div>
          
         </div>
 
@@ -240,7 +246,10 @@ const AdminDashboard = () => {
             <tbody>
               {users.map((u) => (
                 <tr key={u._id} className="border-b">
-                  <td className="p-3">{u.name}</td>
+                  <td className="p-3">
+                    {u.name}
+                    {u.linked && <p className="text-xs text-gray-500">{u.linked}</p>}
+                  </td>
                   <td className="p-3 capitalize">{u.role === "child" ? "Student" : u.role}</td>
                   <td className="p-3">
                     {u.restricted ? "Restricted" : "Active"}

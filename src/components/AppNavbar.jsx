@@ -12,6 +12,7 @@ const THEMES = {
   teacher: { bg: '#1E88FF', light: true, label: 'Teacher' },
   principal: { bg: '#2EC26A', light: true, label: 'Principal' },
   admin: { bg: '#8B5CF6', light: true, label: 'Admin' },
+  parent: { bg: '#FF7A59', light: true, label: 'Parent' },
 };
 
 const TabButton = ({ tab, light, onDone }) => {
@@ -104,11 +105,6 @@ const AppNavbar = ({ role = 'student', tabs = [], fixed = false, homeTo, onHome,
         <AiTutorLogo className="h-9 w-9" />
       </span>
       <AiTutorWordmark light={theme.light} />
-      {theme.label && (
-        <span className="landing-display ml-1 hidden rounded-full bg-white/25 px-2.5 py-0.5 text-sm font-semibold text-white sm:inline">
-          {theme.label}
-        </span>
-      )}
     </>
   );
 
@@ -150,6 +146,7 @@ const AppNavbar = ({ role = 'student', tabs = [], fixed = false, homeTo, onHome,
               {fullName && (
                 <p className="px-4 pb-2 pt-2 text-sm font-semibold text-[#6B7390]">
                   Signed in as <span className="font-bold text-[#1E2A55]">{fullName}</span>
+                  {theme.label && <span className="block text-xs font-bold text-[#8A91AD]">{theme.label}</span>}
                 </p>
               )}
 

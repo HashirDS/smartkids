@@ -5,6 +5,9 @@
       "excludeFiles": "{public,src,node_modules,dist,.git,.github,docs,backend/tests}/**"
     }
   },
+  "crons": [
+    { "path": "/api/cron/weekly-report", "schedule": "0 4 * * 0" }
+  ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [

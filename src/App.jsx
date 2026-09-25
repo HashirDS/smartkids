@@ -27,6 +27,8 @@ import TermsOfService from './components/legal/TermsOfService.jsx';
 import CookiePolicy from './components/legal/CookiePolicy.jsx';
 import AdminSchools from './components/school/AdminSchools.jsx';
 import SchoolPage from './components/school/SchoolPage.jsx';
+import JoinPage from './components/parent/JoinPage.jsx';
+import ParentDashboard from './components/parent/ParentDashboard.jsx';
 
 function ProtectedRoute({ children, allow }) {
   const isLoggedIn = localStorage.getItem("user");
@@ -54,6 +56,8 @@ function App() {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/cookies" element={<CookiePolicy />} />
+        <Route path="/join" element={<JoinPage />} />
+        <Route path="/parent" element={<ProtectedRoute allow={["parent"]}><ParentDashboard /></ProtectedRoute>} />
 
         {/* Dashboards */}
         <Route

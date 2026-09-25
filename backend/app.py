@@ -25,6 +25,7 @@ from pymongo import ReturnDocument
 from xml.sax.saxutils import escape as xml_escape
 from schools import (register_school_routes, can_view_student, visible_student_filter,
                      visible_student_ids, assign_to_default, migrate_existing_users)
+from parents import register_parent_routes
 import hmac
 from werkzeug.security import check_password_hash
 # --- NEW IMPORTS FOR AI & TTS ---
@@ -529,7 +530,7 @@ def get_my_progress():
 @app.route("/api/progress/summary/<user_id>", methods=["GET"])
 def get_child_progress(user_id):
     session = current_session()
-    if not session or session.get("user_type") not in ("child", "teacher", "principal", "admin"):
+    if not session or session.get("user_type") not in ("child", "teacher", "principal", "admin", "parent"):
         return jsonify({"message": "Unauthorized"}), 401
     if not can_view_student(db, session, user_id):
         return jsonify({"message": "You can only view your own students' progress"}), 403
@@ -2161,12 +2162,16 @@ def admin_stats():
         total_children = db.users.count_documents({"user_type": "child"})
         total_teachers = db.users.count_documents({"user_type": "teacher"})
         total_admins = db.users.count_documents({"user_type": {"$in": ["admin", "sub_admin"]}})
+        total_parents = db.users.count_documents({"user_type": "parent"})
+        total_principals = db.users.count_documents({"user_type": "principal"})
 
         return jsonify({
             "total_users": total_users,
             "children": total_children,
             "teachers": total_teachers,
-            "admins": total_admins
+            "admins": total_admins,
+            "parents": total_parents,
+            "principals": total_principals,
         }), 200
 
     except Exception as e:
@@ -2190,17 +2195,29 @@ def admin_get_users():
             "last_name": 1,
             "username": 1,
             "user_type": 1,
-            "restricted": 1
+            "restricted": 1,
+            "child_ids": 1,
+            "parent": 1,
         })
 
+        all_users = list(users_cursor)
+        names = {str(u["_id"]): f"{u.get('first_name','')} {u.get('last_name','')}".strip() for u in all_users}
         users = []
-        for user in users_cursor:
+        for user in all_users:
+            if user.get("user_type") == "parent":
+                linked = ", ".join(names.get(c, "") for c in user.get("child_ids") or [] if names.get(c))
+                linked = f"Parent of {linked}" if linked else ""
+            elif user.get("user_type") == "child" and (user.get("parent") or {}).get("email"):
+                linked = f"Parent: {user['parent'].get('name') or user['parent']['email']} ({user['parent']['email']})"
+            else:
+                linked = ""
             users.append({
                 "_id": str(user["_id"]),
-                "name": f"{user.get('first_name','')} {user.get('last_name','')}".strip(),
+                "name": names[str(user["_id"])],
                 "email": user.get("username"),
                 "role": user.get("user_type"),
-                "restricted": user.get("restricted", False)
+                "restricted": user.get("restricted", False),
+                "linked": linked,
             })
 
         return jsonify(users), 200
@@ -2223,6 +2240,7 @@ def admin_delete_user(user_id):
         db.users.delete_one({"_id": ObjectId(user_id)})
         db.progress.delete_one({"_id": ObjectId(user_id)})
         db.classes.update_many({"teacher_ids": str(user_id)}, {"$pull": {"teacher_ids": str(user_id)}})
+        db.users.update_many({"child_ids": str(user_id)}, {"$pull": {"child_ids": str(user_id)}})
         db.sessions.delete_many({"user_id": str(user_id)})
 
         return jsonify({"message": "User deleted successfully"}), 200
@@ -2359,6 +2377,7 @@ def get_global_lesson_restrictions():
 
 # Schools, classes, principals (see schools.py)
 register_school_routes(app, sys.modules[__name__])
+register_parent_routes(app, sys.modules[__name__])
 
 # --- (Application Run - UNCHANGED) ---
 if __name__ == "__main__":
