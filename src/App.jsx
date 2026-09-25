@@ -25,6 +25,8 @@ import CookieBanner from './components/CookieBanner.jsx';
 import PrivacyPolicy from './components/legal/PrivacyPolicy.jsx';
 import TermsOfService from './components/legal/TermsOfService.jsx';
 import CookiePolicy from './components/legal/CookiePolicy.jsx';
+import AdminSchools from './components/school/AdminSchools.jsx';
+import SchoolPage from './components/school/SchoolPage.jsx';
 
 function ProtectedRoute({ children, allow }) {
   const isLoggedIn = localStorage.getItem("user");
@@ -57,7 +59,7 @@ function App() {
         <Route
           path="/child-dashboard"
           element={
-            <ProtectedRoute allow={["child", "teacher", "admin"]}>
+            <ProtectedRoute allow={["child", "teacher", "principal", "admin"]}>
               <VoiceEnabledWrapper>
                 <ChildDashboard />
               </VoiceEnabledWrapper>
@@ -67,7 +69,7 @@ function App() {
         <Route
           path="/my-progress"
           element={
-            <ProtectedRoute allow={["child", "teacher", "admin"]}>
+            <ProtectedRoute allow={["child", "teacher", "principal", "admin"]}>
               <MyProgress />
             </ProtectedRoute>
           }
@@ -75,7 +77,7 @@ function App() {
         <Route
           path="/teacher-dashboard"
           element={
-            <ProtectedRoute allow={["teacher", "admin"]}>
+            <ProtectedRoute allow={["teacher", "principal", "admin"]}>
               <TeacherDashboard />
             </ProtectedRoute>
           }
@@ -85,7 +87,7 @@ function App() {
         <Route
           path="/general-character"
           element={
-            <ProtectedRoute allow={["child", "teacher", "admin"]}>
+            <ProtectedRoute allow={["child", "teacher", "principal", "admin"]}>
               <VoiceEnabledWrapper>
                 <GeneralCharacter />
               </VoiceEnabledWrapper>
@@ -95,7 +97,7 @@ function App() {
         <Route
           path="/teaching"
           element={
-            <ProtectedRoute allow={["child", "teacher", "admin"]}>
+            <ProtectedRoute allow={["child", "teacher", "principal", "admin"]}>
               <VoiceEnabledWrapper>
                 <TeachingInterface />
               </VoiceEnabledWrapper>
@@ -115,20 +117,25 @@ function App() {
         <Route
           path="/ai-teacher"
           element={
-            <ProtectedRoute allow={["child", "teacher", "admin"]}>
+            <ProtectedRoute allow={["child", "teacher", "principal", "admin"]}>
               <Experience />
             </ProtectedRoute>
           }
         />
 
         {/* Learning Pages */}
-        <Route path="/drawing-board" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><DrawingBoard /></ProtectedRoute>} />
-        <Route path="/poems-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><PoemsLesson /></ProtectedRoute>} />
-        <Route path="/abc-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><AbcLesson /></ProtectedRoute>} />
-        <Route path="/shapes-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><ShapesLesson /></ProtectedRoute>} />
-        <Route path="/num-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><NumLesson /></ProtectedRoute>} />
-        <Route path="/colors-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><ColorsLesson /></ProtectedRoute>} />
-        <Route path="/flags-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><FlagsLesson /></ProtectedRoute>} />
+        <Route path="/drawing-board" element={<ProtectedRoute allow={["child", "teacher", "principal", "admin"]}><DrawingBoard /></ProtectedRoute>} />
+        <Route path="/poems-lesson" element={<ProtectedRoute allow={["child", "teacher", "principal", "admin"]}><PoemsLesson /></ProtectedRoute>} />
+        <Route path="/abc-lesson" element={<ProtectedRoute allow={["child", "teacher", "principal", "admin"]}><AbcLesson /></ProtectedRoute>} />
+        <Route path="/shapes-lesson" element={<ProtectedRoute allow={["child", "teacher", "principal", "admin"]}><ShapesLesson /></ProtectedRoute>} />
+        <Route path="/num-lesson" element={<ProtectedRoute allow={["child", "teacher", "principal", "admin"]}><NumLesson /></ProtectedRoute>} />
+        <Route path="/colors-lesson" element={<ProtectedRoute allow={["child", "teacher", "principal", "admin"]}><ColorsLesson /></ProtectedRoute>} />
+        <Route path="/flags-lesson" element={<ProtectedRoute allow={["child", "teacher", "principal", "admin"]}><FlagsLesson /></ProtectedRoute>} />
+
+        {/* Schools */}
+        <Route path="/admin/schools" element={<ProtectedRoute allow={["admin"]}><AdminSchools /></ProtectedRoute>} />
+        <Route path="/school" element={<ProtectedRoute allow={["principal"]}><SchoolPage /></ProtectedRoute>} />
+        <Route path="/school/:schoolId" element={<ProtectedRoute allow={["admin"]}><SchoolPage /></ProtectedRoute>} />
 
         {/* Unknown addresses go back to the landing page instead of a blank screen */}
         <Route path="*" element={<Navigate to="/" replace />} />
