@@ -61,6 +61,17 @@ const ChildCard = ({ child, color, onNewPassword }) => {
         />
       </div>
 
+      {(child.streak > 0 || child.badges?.length > 0) && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {child.streak > 0 && <Badge color="#FFE8D6" text="#C2410C">🔥 {t('parent.streakDays', { n: child.streak })}</Badge>}
+          {child.badges?.length > 0 && (
+            <span className="text-sm font-bold text-[#1E2A55]" title={child.badges.map((b) => b.title).join(', ')}>
+              {t('parent.badges')}: <span dir="ltr">{child.badges.map((b) => b.emoji).join(' ')}</span>
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="mt-4">
         <p className="text-sm font-bold text-[#1E2A55]">{t('parent.learnedSoFar')}</p>
         {learned.length ? (

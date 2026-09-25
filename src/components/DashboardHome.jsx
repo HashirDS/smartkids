@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import StudentQuizBanner from './StudentQuizBanner';
 import { useT } from '../i18n';
+import RewardsStrip from './rewards/RewardsStrip';
 // Added Apple icon for the new card
 import { Apple } from 'lucide-react'; // Make sure lucide-react is installed
 
@@ -121,6 +122,8 @@ const DashboardHome = ({ onSelectContent }) => {
             {t('home.subtitle')} 🎉
           </p>
         </div>
+
+        <RewardsStrip onOpen={() => onSelectContent('rewards')} />
 
         {/* Interactive Activity Cards Grid */}
         {/* Updated grid columns for better responsiveness */}
