@@ -25,6 +25,7 @@ const VoiceController = ({ onCommand }) => {
             else if (last.includes("number")) onCommand("numbers");
             else if (last.includes("shape")) onCommand("shapes");
             else if (last.includes("color") || last.includes("colour")) onCommand("colors");
+            else if (last.includes("flag") || last.includes("countr")) onCommand("flags");
             else if (last.includes("home")) onCommand("home");
             else if (last.includes("teacher")) onCommand("teacher");
         };

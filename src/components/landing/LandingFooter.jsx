@@ -28,7 +28,11 @@ const LandingFooter = () => {
 
         <div className="md:text-right">
           <p className="font-bold text-white">Location</p>
-          <p className="mt-1">STP, University of Kotli, AJK, Pakistan</p>
+          <div className="mt-1 flex items-center gap-2 md:justify-end">
+            <img src="/flags/ajk.svg" alt="Flag of Azad Jammu and Kashmir" title="Azad Jammu and Kashmir" className="h-4 w-6 rounded-[3px] object-cover shadow-[0_1px_2px_rgba(0,0,0,0.4)]" />
+            <img src="/flags/pk.svg" alt="Flag of Pakistan" title="Pakistan" className="h-4 w-6 rounded-[3px] object-cover shadow-[0_1px_2px_rgba(0,0,0,0.4)]" />
+            <p>STP, University of Kotli, AJK, Pakistan</p>
+          </div>
           <div className="mt-3 flex gap-2 md:justify-end">
             <a href="mailto:contact@datixai.com" className={contactBtn}>
               <Mail className="h-3.5 w-3.5" />

@@ -17,6 +17,7 @@ import AbcLesson from './components/AbcLesson.jsx';
 import ShapesLesson from './components/ShapesLesson.jsx';
 import NumLesson from './components/NumLesson.jsx';
 import ColorsLesson from './components/ColorsLesson.jsx';
+import FlagsLesson from './components/FlagsLesson.jsx';
 import AdminDashboard from "./components/AdminDashboard.jsx";
 import MyProgress from "./components/MyProgress.jsx";
 import WhatsAppButton from './components/WhatsAppButton.jsx';
@@ -139,6 +140,7 @@ function App() {
         <Route path="/shapes-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><ShapesLesson /></ProtectedRoute>} />
         <Route path="/num-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><NumLesson /></ProtectedRoute>} />
         <Route path="/colors-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><ColorsLesson /></ProtectedRoute>} />
+        <Route path="/flags-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><FlagsLesson /></ProtectedRoute>} />
 
         {/* Unknown addresses go back to the landing page instead of a blank screen */}
         <Route path="*" element={<Navigate to="/" replace />} />

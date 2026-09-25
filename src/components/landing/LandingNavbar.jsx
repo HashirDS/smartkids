@@ -84,10 +84,6 @@ const LandingNavbar = () => {
         </a>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5" aria-label="Proudly from Azad Jammu and Kashmir, Pakistan">
-            <img src="/flags/ajk.svg" alt="Flag of Azad Jammu and Kashmir" title="Azad Jammu and Kashmir" className="h-4 w-6 rounded-[3px] object-cover shadow-[0_1px_2px_rgba(30,42,85,0.35)] sm:h-5 sm:w-7" />
-            <img src="/flags/pk.svg" alt="Flag of Pakistan" title="Pakistan" className="h-4 w-6 rounded-[3px] object-cover shadow-[0_1px_2px_rgba(30,42,85,0.35)] sm:h-5 sm:w-7" />
-          </div>
           <div ref={menuRef} className="relative">
             <button
               type="button"
