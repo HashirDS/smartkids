@@ -59,6 +59,9 @@ from werkzeug.utils import secure_filename
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
+from monitoring import init_sentry, system_status
+SENTRY_ON = init_sentry()
+
 # Initialize the Flask application
 app = Flask(__name__)
 
@@ -1259,7 +1262,7 @@ RULES:
         }), 500
 
 
-@app.route('/api/health', methods=['GET'])
+@app.route('/api/health', methods=['GET', 'HEAD'])
 def health():
     """Uptime check: 200 when the API and database respond, 503 otherwise."""
     db_ok = False
@@ -1269,7 +1272,25 @@ def health():
             db_ok = True
         except Exception as e:
             print(f"Health check DB ping failed: {e}")
-    return jsonify({"status": "ok" if db_ok else "degraded", "database": db_ok}), (200 if db_ok else 503)
+    status = system_status()
+    return jsonify({"status": "ok" if db_ok else "degraded", "database": db_ok,
+                    "version": status["version"], "environment": status["environment"],
+                    "time": datetime.utcnow().isoformat() + "Z"}), (200 if db_ok else 503)
+
+
+@app.route('/api/admin/system-status', methods=['GET'])
+def admin_system_status():
+    denied = reject_unless("admin")
+    if denied:
+        return denied
+    db_ok = False
+    if db is not None:
+        try:
+            db.command("ping")
+            db_ok = True
+        except Exception:
+            db_ok = False
+    return jsonify({**system_status(), "database": db_ok}), 200
 
 
 @app.route('/api/status', methods=['GET'])

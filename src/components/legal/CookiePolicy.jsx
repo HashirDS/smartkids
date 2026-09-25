@@ -5,13 +5,15 @@ const ROWS = [
   ['Login session (token, user ID, name, account type)', 'Keeps you signed in and opens the right dashboard.', 'Until you log out (the server session ends after 30 days)'],
   ['Free demo timer', 'Remembers when your free 3D classroom demo started.', '24 hours'],
   ['Cookie choice', 'Remembers your choice on the cookie notice.', 'Until you clear it'],
+  ['Visitor statistics (only if you press Accept)', 'Vercel Web Analytics counts visits to our public pages (home, login, join, legal pages). It sets no cookies, does not track you across sites, and never runs on lesson or dashboard pages.', 'Not stored in your browser'],
+  ['Error reports (Sentry)', 'If the app breaks, a report of the error is sent so we can fix it. Names, emails, logins and page details are removed first.', 'Not stored in your browser'],
 ];
 
 const CookiePolicy = () => (
   <LegalLayout
     title="Cookie Policy"
     description="The cookies and browser storage AI Tutor uses, and how to control them."
-    intro="AI Tutor does not use advertising or tracking cookies. We only store the small amount of information the site needs to work, mostly in your browser's local storage, which works like a cookie."
+    intro="AI Tutor does not use advertising or tracking cookies. We store the small amount of information the site needs to work, mostly in your browser's local storage, which works like a cookie. Optional visitor statistics run only if you press Accept."
   >
     <Section title="What we store">
       <div className="overflow-x-auto">

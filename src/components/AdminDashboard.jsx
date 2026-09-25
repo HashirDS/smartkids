@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { ShieldCheck, Save } from "lucide-react";
 import { API_URL, apiFetch } from "../api";
+import SystemStatus from "./SystemStatus";
 
 const LESSONS = [
   { key: "abc", label: "ABC" },
@@ -207,6 +208,8 @@ const AdminDashboard = () => {
           </div>
          
         </div>
+
+        <SystemStatus />
 
         {/* CHARTS */}
         <div className="grid md:grid-cols-2 gap-8 mb-12">
