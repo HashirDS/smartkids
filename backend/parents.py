@@ -15,6 +15,7 @@ import requests
 from flask import jsonify, request
 from validators import email as valid_email
 
+from rewards import rewards_for
 from schools import LEVEL_LABELS, can_view_student, create_student, kid_password, oid
 
 CATEGORY_LABELS = {"abc": "ABC", "numbers": "Numbers", "shapes": "Shapes", "colors": "Colours",
@@ -58,8 +59,12 @@ def child_report(db, child, since=None):
         teachers = [f"{t.get('first_name', '')} {t.get('last_name', '')}".strip()
                     for t in db.users.find({"_id": {"$in": [o for o in map(oid, cls["teacher_ids"]) if o]}})]
 
+    rewards = rewards_for(db, child["_id"])
     return {
         "_id": str(child["_id"]),
+        "streak": rewards["streak"]["current"],
+        "longest_streak": rewards["streak"]["longest"],
+        "badges": [{"title": b["title"], "emoji": b["emoji"]} for b in rewards["badges"] if b["earned"]],
         "first_name": child.get("first_name", ""),
         "last_name": child.get("last_name", ""),
         "username": child.get("username", ""),
@@ -106,6 +111,10 @@ def weekly_email_html(parent, reports, base_url):
             f"<b>{w['quizzes']}</b> quizzes" + (f" &middot; average {w['quiz_average']}%" if w["quiz_average"] is not None else ""),
             f"<b>{r['items_learned']}</b> things learned so far &middot; <b>{r['stars']}</b> stars",
         ]
+        if r["streak"]:
+            lines.append(f"&#128293; <b>{r['streak']}</b>-day learning streak")
+        if r["badges"]:
+            lines.append("Badges: " + " ".join(f"{b['emoji']} {esc(b['title'])}" for b in r["badges"][-4:]))
         learned = ", ".join(f"{CATEGORY_LABELS[k]} {v}" for k, v in r["by_category"].items() if v)
         where = " &middot; ".join(esc(x) for x in (r["class_name"], r["school_name"]) if x)
         quiet = "" if w["active"] else (

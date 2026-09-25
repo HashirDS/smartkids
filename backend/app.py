@@ -26,6 +26,7 @@ from xml.sax.saxutils import escape as xml_escape
 from schools import (register_school_routes, can_view_student, visible_student_filter,
                      visible_student_ids, assign_to_default, migrate_existing_users)
 from parents import CATEGORY_LABELS, register_parent_routes
+from rewards import record_activity, register_reward_routes
 import hmac
 from werkzeug.security import check_password_hash
 # --- NEW IMPORTS FOR AI & TTS ---
@@ -596,6 +597,7 @@ def mark_item_complete():
                 {"_id": ObjectId(user_id)},
                 {"$set": {"last_activity": datetime.utcnow().isoformat()}}
             )
+            record_activity(db, user_id)
             return jsonify({"message": "Item already completed"}), 200
 
         update_result = db.progress.update_one(
@@ -609,6 +611,7 @@ def mark_item_complete():
         )
         if update_result.matched_count == 0:
               return jsonify({"message": "Progress update failed. User profile missing."}), 404
+        record_activity(db, user_id)
         return jsonify({"message": "Progress updated successfully"}), 200
     except Exception as e:
         print(f"Error updating progress: {e}")
@@ -770,17 +773,32 @@ def ask_ai():
 # -----------------------------------------------------
 TTS_VOICES = {"ur": ("ur-PK", "ur-PK-UzmaNeural"), "ar": ("ar-SA", "ar-SA-ZariyahNeural")}
 TTS_MALE_VOICES = {"ur": "ur-PK-AsadNeural", "ar": "ar-SA-HamedNeural"}
+GTTS_LANGS = {"en": "en", "ur": "ur", "ar": "ar"}
+
+
+def _gtts_audio(text, lang):
+    """Free Google voice (gTTS), used when Azure speech is not set up or fails."""
+    try:
+        from gtts import gTTS as GoogleTTS
+        buf = io.BytesIO()
+        GoogleTTS(text=text, lang=GTTS_LANGS.get(lang, "en"), slow=lang != "en").write_to_fp(buf)
+        return Response(buf.getvalue(), mimetype="audio/mpeg",
+                        headers={"Visemes": "[]", "Content-Disposition": "inline; filename=tts.mp3"})
+    except Exception as e:
+        print(f"gTTS fallback failed: {e}")
+        return Response("Speech is not available right now.", status=502)
 
 @app.route('/api/tts', methods=['GET'])
 def get_tts():
-    if not SPEECH_KEY or not SPEECH_REGION:
-        return Response("TTS keys are not configured on the server.", status=500)
-
     text = (request.args.get("text") or "").strip()[:1200]
     if not text:
         return Response("Missing text parameter for TTS.", status=400)
     if rate_limited(f"tts:{client_ip()}", 60, 600):
         return Response("Too many requests. Please wait a few minutes.", status=429)
+    raw_text = text
+    tts_lang = request.args.get("lang", "en")
+    if not SPEECH_KEY or not SPEECH_REGION:
+        return _gtts_audio(raw_text, tts_lang)
     # Escape the text so it cannot inject extra SSML tags.
     text = xml_escape(text)
 
@@ -794,7 +812,6 @@ def get_tts():
         voice_name = "en-US-JennyNeural"
 
     # Urdu and Arabic lessons/UI: same female/male choice in that language.
-    tts_lang = request.args.get("lang", "en")
     ssml_lang, voice_name = TTS_VOICES.get(tts_lang, ("en-US", voice_name))
     if tts_lang in TTS_VOICES and teacher == "male":
         voice_name = TTS_MALE_VOICES[tts_lang]
@@ -821,7 +838,7 @@ def get_tts():
             )
             if tts_res.status_code != 200:
                 print(f"Azure TTS REST error {tts_res.status_code}: {tts_res.text[:200]}")
-                return Response("Speech is not available right now.", status=502)
+                return _gtts_audio(raw_text, tts_lang)
             return Response(
                 tts_res.content,
                 mimetype="audio/mpeg",
@@ -829,7 +846,7 @@ def get_tts():
             )
         except Exception as e:
             print(f"Azure TTS REST failed: {e}")
-            return Response("Speech is not available right now.", status=502)
+            return _gtts_audio(raw_text, tts_lang)
 
     try:
         # 1. Speech Configuration (UNCHANGED except voice)
@@ -1059,6 +1076,7 @@ def analyze_speech():
                     },
                     upsert=True
                 )
+                record_activity(db, user_id)
                 print(f"⭐ Score update OK for user {user_id}")
             except Exception as e:
                 print("⚠️ DB update failed:", e)
@@ -1510,6 +1528,7 @@ def submit_assessment():
 
         # Insert into assessments collection
         result = db.assessments.insert_one(assessment_record)
+        record_activity(db, user_id)
 
         # Also update user's quiz_history in their profile (similar to speech_history)
         db.users.update_one(
@@ -2388,6 +2407,7 @@ def get_global_lesson_restrictions():
 # Schools, classes, principals (see schools.py)
 register_school_routes(app, sys.modules[__name__])
 register_parent_routes(app, sys.modules[__name__])
+register_reward_routes(app, sys.modules[__name__])
 
 # --- (Application Run - UNCHANGED) ---
 if __name__ == "__main__":

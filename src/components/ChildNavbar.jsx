@@ -22,6 +22,7 @@ const ChildNavbar = ({ onContentSelect, activeContent }) => {
       })),
     },
     { key: 'ai-teacher', label: t('nav.teacher3d'), href: '/ai-teacher' },
+    { key: 'rewards', label: t('nav.rewards'), active: activeContent === 'rewards', onClick: () => select('rewards') },
     { key: 'progress', label: t('nav.myProgress'), to: '/my-progress' },
   ];
 

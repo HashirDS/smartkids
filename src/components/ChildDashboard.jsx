@@ -12,6 +12,7 @@ import FlagsLesson from './FlagsLesson';
 import UrduLesson from './lessons/UrduLesson';
 import ArabicLesson from './lessons/ArabicLesson';
 import TopicLesson from './lessons/TopicLesson';
+import StickerBook from './rewards/StickerBook';
 import { useT } from '../i18n';
 import ChildQuiz from './ChildQuiz';
 import { API_URL, apiFetch } from '../api';
@@ -99,6 +100,8 @@ const ChildDashboard = () => {
       case 'science':
       case 'animals':
         return <TopicLesson key={activeContent} lesson={activeContent} />;
+      case 'rewards':
+        return <StickerBook />;
       case 'quiz':
         return <ChildQuiz kind="recommendation" />;
       case 'quiz-teacher':

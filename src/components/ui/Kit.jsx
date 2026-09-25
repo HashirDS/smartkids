@@ -115,12 +115,14 @@ export const Modal = ({ title, onClose, children, footer }) => {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
   return (
-    <div className="landing fixed inset-0 z-[60] flex items-center justify-center bg-[#1E2A55]/40 p-4" onMouseDown={onClose}>
+    // `.landing` sits on the dialog, not the backdrop: its cream background would hide the dimmed page.
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#1E2A55]/40 p-4" onMouseDown={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="landing-pop max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white p-6 shadow-[0_10px_0_rgba(30,42,85,0.15)]"
+        className="landing landing-pop max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl p-6 shadow-[0_10px_0_rgba(30,42,85,0.15)]"
+        style={{ backgroundColor: '#fff' }}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">

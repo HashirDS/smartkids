@@ -114,9 +114,17 @@ Each module is built, tested (automated + clicked through), then pushed to the
 - Each has a 5-question quiz and is linked to tiles, Lessons menu, voice commands ("Islamic", "Science",
   "Animals"), progress, teacher charts, restrictions, parent page and weekly email.
 
-### M5 – Motivation: stickers, badges, streaks ⬜
-- Stickers for each item learned, badges for milestones (e.g. "ABC Star", "10-day streak"),
-  daily streak counter; shown on student home, parent dashboard and weekly email.
+### M5 – Motivation: stickers, badges, streaks ✅
+- **Stickers**: every learned item is a sticker in the child's sticker book (letters, flags, animal and
+  topic pictures), grouped by lesson.
+- **Streaks**: each learning action (lesson item, speaking, quiz) marks the day in Pakistan time;
+  the streak stays alive until the end of the next day. Home shows the streak and the last 7 days.
+- **21 badges**: sticker milestones (1, 10, 25, 50, 100), streaks (3, 7, 30 days), a badge per lesson
+  (e.g. ABC Star, Qaida Star, Little Scientist, Animal Friend), First Quiz and Perfect Score.
+  Locked badges show progress; a "New badge!" pop-up celebrates new ones.
+- Shown on the student home ("Rewards" tab + strip), the parent page (streak + badge row) and the weekly email.
+- Badges are worked out from existing progress, so older accounts get the badges they already deserve.
+- Also: Urdu/Arabic tutor voice now falls back to the free Google voice (gTTS) when the Azure key is missing or fails.
 
 ### M6 – Analytics, error monitoring, uptime ⬜
 - Privacy-friendly, cookie-free page analytics (Vercel Web Analytics), only after consent on public pages,
@@ -164,3 +172,4 @@ Features that need a key stay switched off until the key is added; nothing break
 | 2026-09-25 | M2 | Parent role and dashboard, /join with class code and consent, sibling add, automatic parent logins from staff, weekly email via Resend + Vercel Cron with unsubscribe, admin parent links; fixed a visibility rule so a parent can only ever see their own children; role label moved from navbar into the ☰ menu |
 | 2026-09-25 | M3 | English/Urdu/Arabic switch with right-to-left layout for students and parents, Urdu alphabet and Arabic Qaida lessons with Azure Urdu/Arabic voices, Urdu and Arabic quizzes, new lessons linked to menus, voice, progress, charts, restrictions and parent reports |
 | 2026-09-25 | M4 | Islamic Studies (pending scholar review), Science and Animals lessons with quizzes, linked everywhere; friendly lesson names in quiz recommendations |
+| 2026-09-25 | M5 | Stickers, streaks and 21 badges on student home, sticker book, parent page and weekly email; Urdu/Arabic voice fallback to gTTS; pop-up backdrop fix |

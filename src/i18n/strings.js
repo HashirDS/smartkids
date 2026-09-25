@@ -5,7 +5,7 @@ export const STRINGS = {
   en: {
     common: { language: 'Language', loading: 'Loading…', cancel: 'Cancel', done: 'Done', copy: 'Copy', copied: 'Copied!', print: 'Print' },
     nav: {
-      home: 'Home', lessons: 'Lessons', teacher3d: '3D Teacher', myProgress: 'My Progress', myChildren: 'My children',
+      home: 'Home', lessons: 'Lessons', teacher3d: '3D Teacher', myProgress: 'My Progress', rewards: 'Rewards', myChildren: 'My children',
       signedInAs: 'Signed in as', logout: 'Log out', logoutConfirm: 'Do you want to log out?',
       openMenu: 'Open menu', closeMenu: 'Close menu',
     },
@@ -13,6 +13,12 @@ export const STRINGS = {
     lessons: {
       abc: 'ABC', numbers: 'Numbers', shapes: 'Shapes', colors: 'Colours', fruits: 'Fruits', poems: 'Poems',
       drawing: 'Drawing', flags: 'Flags', urdu: 'Urdu Alphabet', arabic: 'Arabic Qaida', islamic: 'Islamic Studies', science: 'Science', animals: 'Animals',
+    },
+    rewards: {
+      streak: '{n}-day streak', stickers: '{n} stickers', badges: '{n} badges', open: 'My sticker book',
+      last7: 'Last 7 days', learnToday: 'Learn something today to keep your streak!', newBadge: 'New badge!', yay: 'Yay!',
+      title: 'My sticker book', longest: 'Best: {n} days', stickerTab: 'Stickers', badgeTab: 'Badges',
+      noStickers: 'Learn your first thing in any lesson to get a sticker!', earned: 'Earned',
     },
     home: {
       welcome: 'Welcome, Little Star!', subtitle: 'What adventure shall we start today?',
@@ -37,7 +43,7 @@ export const STRINGS = {
       noChildren: 'No children linked yet', noChildrenText: 'Add your child with the class code from their school.',
       teacher: 'Teacher', stars: 'Stars', thingsLearned: 'Things learned', speakingWeek: 'Speaking tries this week',
       clear: '{n}% clear', quizzesWeek: 'Quizzes this week', average: 'avg {n}%', learnedSoFar: 'Learned so far',
-      nothingYet: 'Nothing yet. ABC and Numbers are good first lessons.', recentQuizzes: 'Recent quizzes',
+      nothingYet: 'Nothing yet. ABC and Numbers are good first lessons.', recentQuizzes: 'Recent quizzes', streakDays: '{n}-day streak', badges: 'Badges',
       login: 'Login', newPassword: 'New password', newPasswordConfirm: 'Make a new password for {name}? The old one will stop working.',
       newLoginTitle: "{name}'s new login", loginTitle: "{name}'s login ({cls})",
       weeklyEmail: 'Weekly email', weeklyEmailText: 'A short progress note every Sunday to {email}.',
@@ -64,7 +70,7 @@ export const STRINGS = {
   ur: {
     common: { language: 'زبان', loading: 'لوڈ ہو رہا ہے…', cancel: 'منسوخ', done: 'ٹھیک ہے', copy: 'کاپی', copied: 'کاپی ہو گیا!', print: 'پرنٹ' },
     nav: {
-      home: 'ہوم', lessons: 'اسباق', teacher3d: 'تھری ڈی ٹیچر', myProgress: 'میری ترقی', myChildren: 'میرے بچے',
+      home: 'ہوم', lessons: 'اسباق', teacher3d: 'تھری ڈی ٹیچر', myProgress: 'میری ترقی', rewards: 'انعامات', myChildren: 'میرے بچے',
       signedInAs: 'لاگ اِن:', logout: 'لاگ آؤٹ', logoutConfirm: 'کیا آپ لاگ آؤٹ کرنا چاہتے ہیں؟',
       openMenu: 'مینو کھولیں', closeMenu: 'مینو بند کریں',
     },
@@ -72,6 +78,12 @@ export const STRINGS = {
     lessons: {
       abc: 'اے بی سی', numbers: 'گنتی', shapes: 'شکلیں', colors: 'رنگ', fruits: 'پھل', poems: 'نظمیں',
       drawing: 'ڈرائنگ', flags: 'جھنڈے', urdu: 'اردو حروفِ تہجی', arabic: 'عربی قاعدہ', islamic: 'اسلامیات', science: 'سائنس', animals: 'جانور',
+    },
+    rewards: {
+      streak: '{n} دن کا سلسلہ', stickers: '{n} اسٹیکر', badges: '{n} بیج', open: 'میری اسٹیکر بک',
+      last7: 'پچھلے 7 دن', learnToday: 'سلسلہ جاری رکھنے کے لیے آج کچھ سیکھیں!', newBadge: 'نیا بیج!', yay: 'واہ!',
+      title: 'میری اسٹیکر بک', longest: 'سب سے لمبا: {n} دن', stickerTab: 'اسٹیکر', badgeTab: 'بیج',
+      noStickers: 'کسی بھی سبق میں پہلی چیز سیکھیں اور اسٹیکر پائیں!', earned: 'مل گیا',
     },
     home: {
       welcome: 'خوش آمدید، ننھے ستارے!', subtitle: 'آج ہم کون سا مزے دار سبق شروع کریں؟',
@@ -96,7 +108,7 @@ export const STRINGS = {
       noChildren: 'ابھی کوئی بچہ شامل نہیں', noChildrenText: 'اسکول کے دیے ہوئے کلاس کوڈ سے اپنا بچہ شامل کریں۔',
       teacher: 'ٹیچر', stars: 'ستارے', thingsLearned: 'سیکھی ہوئی چیزیں', speakingWeek: 'اس ہفتے بولنے کی مشق',
       clear: '{n}% واضح', quizzesWeek: 'اس ہفتے کے کوئز', average: 'اوسط {n}%', learnedSoFar: 'اب تک سیکھا',
-      nothingYet: 'ابھی کچھ نہیں۔ اے بی سی اور گنتی اچھے پہلے سبق ہیں۔', recentQuizzes: 'حالیہ کوئز',
+      nothingYet: 'ابھی کچھ نہیں۔ اے بی سی اور گنتی اچھے پہلے سبق ہیں۔', recentQuizzes: 'حالیہ کوئز', streakDays: '{n} دن کا سلسلہ', badges: 'بیج',
       login: 'لاگ اِن', newPassword: 'نیا پاس ورڈ', newPasswordConfirm: '{name} کے لیے نیا پاس ورڈ بنائیں؟ پرانا کام کرنا بند کر دے گا۔',
       newLoginTitle: '{name} کا نیا لاگ اِن', loginTitle: '{name} کا لاگ اِن ({cls})',
       weeklyEmail: 'ہفتہ وار ای میل', weeklyEmailText: 'ہر اتوار {email} پر ترقی کا مختصر پیغام۔',
@@ -123,7 +135,7 @@ export const STRINGS = {
   ar: {
     common: { language: 'اللغة', loading: 'جارٍ التحميل…', cancel: 'إلغاء', done: 'تم', copy: 'نسخ', copied: 'تم النسخ!', print: 'طباعة' },
     nav: {
-      home: 'الرئيسية', lessons: 'الدروس', teacher3d: 'المعلّم ثلاثي الأبعاد', myProgress: 'تقدّمي', myChildren: 'أطفالي',
+      home: 'الرئيسية', lessons: 'الدروس', teacher3d: 'المعلّم ثلاثي الأبعاد', myProgress: 'تقدّمي', rewards: 'المكافآت', myChildren: 'أطفالي',
       signedInAs: 'تم الدخول باسم', logout: 'تسجيل الخروج', logoutConfirm: 'هل تريد تسجيل الخروج؟',
       openMenu: 'فتح القائمة', closeMenu: 'إغلاق القائمة',
     },
@@ -131,6 +143,12 @@ export const STRINGS = {
     lessons: {
       abc: 'الحروف الإنجليزية', numbers: 'الأرقام', shapes: 'الأشكال', colors: 'الألوان', fruits: 'الفواكه', poems: 'الأناشيد',
       drawing: 'الرسم', flags: 'الأعلام', urdu: 'الحروف الأردية', arabic: 'القاعدة العربية', islamic: 'التربية الإسلامية', science: 'العلوم', animals: 'الحيوانات',
+    },
+    rewards: {
+      streak: 'سلسلة {n} يوم', stickers: '{n} ملصق', badges: '{n} وسام', open: 'دفتر ملصقاتي',
+      last7: 'آخر 7 أيام', learnToday: 'تعلّم شيئاً اليوم لتحافظ على سلسلتك!', newBadge: 'وسام جديد!', yay: 'رائع!',
+      title: 'دفتر ملصقاتي', longest: 'الأطول: {n} يوم', stickerTab: 'الملصقات', badgeTab: 'الأوسمة',
+      noStickers: 'تعلّم أول شيء في أي درس لتحصل على ملصق!', earned: 'حصلت عليه',
     },
     home: {
       welcome: 'أهلاً يا نجمنا الصغير!', subtitle: 'أيّ مغامرة نبدأ اليوم؟',
@@ -155,7 +173,7 @@ export const STRINGS = {
       noChildren: 'لا يوجد أطفال بعد', noChildrenText: 'أضف طفلك برمز الصف من مدرسته.',
       teacher: 'المعلّم', stars: 'النجوم', thingsLearned: 'ما تعلّمه', speakingWeek: 'محاولات النطق هذا الأسبوع',
       clear: 'وضوح {n}%', quizzesWeek: 'اختبارات هذا الأسبوع', average: 'المعدل {n}%', learnedSoFar: 'ما تعلّمه حتى الآن',
-      nothingYet: 'لا شيء بعد. الحروف والأرقام بداية جيدة.', recentQuizzes: 'آخر الاختبارات',
+      nothingYet: 'لا شيء بعد. الحروف والأرقام بداية جيدة.', recentQuizzes: 'آخر الاختبارات', streakDays: 'سلسلة {n} يوم', badges: 'الأوسمة',
       login: 'اسم الدخول', newPassword: 'كلمة مرور جديدة', newPasswordConfirm: 'إنشاء كلمة مرور جديدة لـ {name}؟ ستتوقف القديمة عن العمل.',
       newLoginTitle: 'بيانات الدخول الجديدة لـ {name}', loginTitle: 'بيانات دخول {name} ({cls})',
       weeklyEmail: 'البريد الأسبوعي', weeklyEmailText: 'ملخّص قصير للتقدّم كل يوم أحد إلى {email}.',
