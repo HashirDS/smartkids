@@ -37,6 +37,9 @@ const CATEGORIES = [
   { key: 'flags', label: 'Flags', color: '#14b8a6' },
   { key: 'urdu', label: 'Urdu', color: '#1E88FF' },
   { key: 'arabic', label: 'Arabic Qaida', color: '#2EC26A' },
+  { key: 'islamic', label: 'Islamic Studies', color: '#0F9D58' },
+  { key: 'science', label: 'Science', color: '#8B5CF6' },
+  { key: 'animals', label: 'Animals', color: '#FF8A3D' },
 ];
 
 const MyProgress = () => {

@@ -12,7 +12,7 @@ export const STRINGS = {
     roles: { teacher: 'Teacher', principal: 'Principal', admin: 'Admin', parent: 'Parent' },
     lessons: {
       abc: 'ABC', numbers: 'Numbers', shapes: 'Shapes', colors: 'Colours', fruits: 'Fruits', poems: 'Poems',
-      drawing: 'Drawing', flags: 'Flags', urdu: 'Urdu Alphabet', arabic: 'Arabic Qaida',
+      drawing: 'Drawing', flags: 'Flags', urdu: 'Urdu Alphabet', arabic: 'Arabic Qaida', islamic: 'Islamic Studies', science: 'Science', animals: 'Animals',
     },
     home: {
       welcome: 'Welcome, Little Star!', subtitle: 'What adventure shall we start today?',
@@ -71,7 +71,7 @@ export const STRINGS = {
     roles: { teacher: 'ٹیچر', principal: 'پرنسپل', admin: 'ایڈمن', parent: 'والدین' },
     lessons: {
       abc: 'اے بی سی', numbers: 'گنتی', shapes: 'شکلیں', colors: 'رنگ', fruits: 'پھل', poems: 'نظمیں',
-      drawing: 'ڈرائنگ', flags: 'جھنڈے', urdu: 'اردو حروفِ تہجی', arabic: 'عربی قاعدہ',
+      drawing: 'ڈرائنگ', flags: 'جھنڈے', urdu: 'اردو حروفِ تہجی', arabic: 'عربی قاعدہ', islamic: 'اسلامیات', science: 'سائنس', animals: 'جانور',
     },
     home: {
       welcome: 'خوش آمدید، ننھے ستارے!', subtitle: 'آج ہم کون سا مزے دار سبق شروع کریں؟',
@@ -130,7 +130,7 @@ export const STRINGS = {
     roles: { teacher: 'معلّم', principal: 'مدير المدرسة', admin: 'المشرف', parent: 'وليّ الأمر' },
     lessons: {
       abc: 'الحروف الإنجليزية', numbers: 'الأرقام', shapes: 'الأشكال', colors: 'الألوان', fruits: 'الفواكه', poems: 'الأناشيد',
-      drawing: 'الرسم', flags: 'الأعلام', urdu: 'الحروف الأردية', arabic: 'القاعدة العربية',
+      drawing: 'الرسم', flags: 'الأعلام', urdu: 'الحروف الأردية', arabic: 'القاعدة العربية', islamic: 'التربية الإسلامية', science: 'العلوم', animals: 'الحيوانات',
     },
     home: {
       welcome: 'أهلاً يا نجمنا الصغير!', subtitle: 'أيّ مغامرة نبدأ اليوم؟',

@@ -10,6 +10,9 @@ const LABELS = {
   flags: 'Flags',
   urdu: 'Urdu Alphabet',
   arabic: 'Arabic Qaida',
+  islamic: 'Islamic Studies',
+  science: 'Science',
+  animals: 'Animals',
 };
 
 const formatWhen = (value) => {

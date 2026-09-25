@@ -2,7 +2,7 @@ import React from 'react';
 import AppNavbar from './AppNavbar';
 import { useT } from '../i18n';
 
-const LESSONS = ['abc', 'numbers', 'shapes', 'colors', 'fruits', 'poems', 'drawing', 'flags', 'urdu', 'arabic'];
+const LESSONS = ['abc', 'numbers', 'shapes', 'colors', 'fruits', 'poems', 'drawing', 'flags', 'urdu', 'arabic', 'islamic', 'science', 'animals'];
 
 // Student navbar: text tabs only; Log out and the language switch are inside the ☰ menu.
 const ChildNavbar = ({ onContentSelect, activeContent }) => {

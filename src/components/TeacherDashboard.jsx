@@ -27,8 +27,11 @@ const CATEGORY_COLORS = {
   flags: '#14b8a6',
   urdu: '#1E88FF',
   arabic: '#2EC26A',
+  islamic: '#0F9D58',
+  science: '#8B5CF6',
+  animals: '#FF8A3D',
 };
-const ALL_CATEGORIES = ['abc', 'numbers', 'shapes', 'colors', 'poems', 'fruits', 'flags', 'urdu', 'arabic'];
+const ALL_CATEGORIES = ['abc', 'numbers', 'shapes', 'colors', 'poems', 'fruits', 'flags', 'urdu', 'arabic', 'islamic', 'science', 'animals'];
 const PIE_COLORS = ALL_CATEGORIES.map(cat => CATEGORY_COLORS[cat] || '#888888');
 // ---
 
