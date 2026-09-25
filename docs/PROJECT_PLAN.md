@@ -135,12 +135,18 @@ Each module is built, tested (automated + clicked through), then pushed to the
 - Admin dashboard **System status** card: database, error alerts, weekly email, schedule, Azure voice (on/off only).
 - Cookie notice and Cookie Policy updated. Setup steps: `docs/MONITORING.md`.
 
-### M7 – Child-safety compliance (ages 3–6) ⬜
-- Parental consent step on every child account; data export/delete on request.
-- AI answers filtered for child safety; no free chat for children with strangers.
-- Public "Child Safety" page; privacy policy updated for schools/parents/principals.
-- Readiness checklist for COPPA, GDPR-K/UK Age-Appropriate Design Code and a kidSAFE-style seal
-  (the certification itself is applied for by the company).
+### M7 – Child-safety compliance (ages 3–6) ✅
+- **Consent:** children cannot sign up alone; child sign-up needs a parent/guardian consent tick, /join needs
+  consent, school-added children are recorded as school consent (Terms now require schools to collect it).
+- **Safe AI** (`backend/child_safety.py`): names, emails, phone/CNIC numbers, links and logins are removed before
+  any AI call; safety rules added to every AI prompt; AI answers are checked (unsafe → friendly reply, links removed,
+  unsafe quiz questions dropped). Deepgram opted out of training on children's voices.
+- **Parent data rights:** download all of a child's data (JSON), delete a child's data for good (typed-name
+  confirmation, anonymous deletion log), delete the parent account. Admin delete also removes quizzes.
+- **Public pages:** new Child Safety page (`/child-safety`, in footer and sitemap); Privacy Policy rewritten for
+  schools, principals, teachers, parents and children with the list of service providers; Terms updated.
+- **Readiness checklist** for COPPA, UK Children's Code (15 standards), EU/UK GDPR and Pakistan:
+  `docs/CHILD_SAFETY_CHECKLIST.md`, including the company's remaining legal to-do list.
 
 ### Deferred (by decision) ⏸
 Email verification, forgot password, multiple admins · Billing (Stripe, JazzCash, Easypaisa) ·
@@ -177,3 +183,4 @@ Features that need a key stay switched off until the key is added; nothing break
 | 2026-09-25 | M4 | Islamic Studies (pending scholar review), Science and Animals lessons with quizzes, linked everywhere; friendly lesson names in quiz recommendations |
 | 2026-09-25 | M5 | Stickers, streaks and 21 badges on student home, sticker book, parent page and weekly email; Urdu/Arabic voice fallback to gTTS; pop-up backdrop fix |
 | 2026-09-25 | M6 | Consent-based cookie-free analytics on public pages, Sentry for website and server with data scrubbing, health check with version, admin System status card, monitoring guide |
+| 2026-09-25 | M7 | Parent consent on child sign-up, AI privacy filter and answer safety check, Deepgram training opt-out, parent data download/delete and account delete, Child Safety page, new Privacy Policy and Terms clause, COPPA/UK/EU readiness checklist |

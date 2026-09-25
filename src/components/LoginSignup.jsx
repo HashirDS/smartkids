@@ -44,6 +44,7 @@ const LoginSignup = () => {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [parentConsent, setParentConsent] = useState(false);
 
     const validateEmail = (email) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.toLowerCase());
@@ -102,6 +103,12 @@ const LoginSignup = () => {
             return;
         }
 
+        if (user_type === 'child' && !parentConsent) {
+            setError("A parent or guardian must create a child's account. Please tick the box.");
+            setLoading(false);
+            return;
+        }
+
         try {
             setError('');
             setSuccessMessage('');
@@ -111,7 +118,8 @@ const LoginSignup = () => {
                 last_name,
                 username: email,
                 password,
-                user_type
+                user_type,
+                parent_consent: user_type === 'child' ? parentConsent : undefined
             };
 
             const response = await apiFetch('/api/register', {
@@ -233,6 +241,23 @@ const LoginSignup = () => {
 
                     <InputField Icon={Mail} type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email Address" />
                     <InputField Icon={Lock} type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Password" />
+
+                    {!isLogin && formData.user_type === 'child' && (
+                        <label className="flex items-start gap-2 text-sm text-gray-600">
+                            <input
+                                type="checkbox"
+                                checked={parentConsent}
+                                onChange={(e) => setParentConsent(e.target.checked)}
+                                className="mt-1 h-4 w-4"
+                            />
+                            <span>
+                                I am this child's parent or guardian and I agree to the{' '}
+                                <Link to="/terms" className="text-indigo-600 font-semibold">Terms</Link>,{' '}
+                                <Link to="/privacy" className="text-indigo-600 font-semibold">Privacy Policy</Link> and{' '}
+                                <Link to="/child-safety" className="text-indigo-600 font-semibold">Child Safety</Link> rules.
+                            </span>
+                        </label>
+                    )}
 
                     <button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold">
                         {loading ? 'Please wait...' : actionText}

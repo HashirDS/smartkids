@@ -16,6 +16,17 @@ const TermsOfService = () => (
       </p>
     </Section>
 
+    <Section title="Schools, principals and parental consent">
+      <List
+        items={[
+          "A school that adds children to AI Tutor must first get consent from each child's parent or guardian, and keep a record of it. The school is responsible for its students' data and we process it on the school's behalf.",
+          "Principals and teachers may only use children's data to teach them and to report progress to their families.",
+          "Parents who join with a class code confirm that they are the child's parent or guardian.",
+          "Parents can download or delete their child's data at any time from the parent page. Schools can remove students at any time.",
+        ]}
+      />
+    </Section>
+
     <Section title="Accounts">
       <List
         items={[

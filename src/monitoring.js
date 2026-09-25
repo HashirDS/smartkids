@@ -5,7 +5,7 @@
 // Errors: Sentry, only when VITE_SENTRY_DSN is set. No names, emails, IDs, tokens or page queries are sent.
 
 export const CONSENT_KEY = 'ai_tutor_cookie_consent';
-export const PUBLIC_PATHS = ['/', '/login', '/try-classroom', '/privacy', '/terms', '/cookies', '/join'];
+export const PUBLIC_PATHS = ['/', '/login', '/try-classroom', '/privacy', '/terms', '/cookies', '/join', '/child-safety'];
 
 const isPublic = (url) => {
   try {

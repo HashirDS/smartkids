@@ -100,6 +100,7 @@ def create_student(db, bcrypt, cls, first, last, parent, created_by, password=No
         "user_type": "child", "school_id": cls["school_id"], "class_ids": [str(cls["_id"])],
         "level": cls.get("level"), "parent": parent or {},
         "created_by": created_by, "created_at": datetime.utcnow(),
+        "consent_source": "school",  # the school collects parental consent (see Terms)
     }
     student.update(extra or {})
     student_id = db.users.insert_one(student).inserted_id

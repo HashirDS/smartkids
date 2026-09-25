@@ -2,7 +2,7 @@ from conftest import PASSWORD, auth
 
 
 def test_child_register_and_login(client, db):
-    r = client.post("/api/register", json={"first_name": "Ali", "last_name": "Khan", "username": "Ali@Test.com", "password": PASSWORD, "user_type": "child"})
+    r = client.post("/api/register", json={"first_name": "Ali", "last_name": "Khan", "username": "Ali@Test.com", "password": PASSWORD, "user_type": "child", "parent_consent": True})
     assert r.status_code == 201 and r.get_json()["token"]
     assert db.progress.find_one({})["completed_items"]["flags"] == []
     assert client.post("/api/login", json={"username": "ali@test.com", "password": PASSWORD}).status_code == 200

@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../Navbar';
 import { apiFetch } from '../../api';
 import { useT } from '../../i18n';
+import { logout } from '../../auth';
 import { Badge, Button, Card, EmptyState, Field, Input, LoginCard, Modal, Notice, Page } from '../ui/Kit';
 
 const CARD_COLORS = ['#FFF1C7', '#E0F1FF', '#FFE3EC', '#DDF7E6'];
@@ -29,7 +31,7 @@ const Stat = ({ value, label }) => (
   </div>
 );
 
-const ChildCard = ({ child, color, onNewPassword }) => {
+const ChildCard = ({ child, color, onNewPassword, onDownload, onDelete }) => {
   const { t, lang } = useT();
   const week = child.week || {};
   const learned = Object.entries(child.by_category || {}).filter(([, n]) => n > 0);
@@ -103,6 +105,10 @@ const ChildCard = ({ child, color, onNewPassword }) => {
         </p>
         <Button variant="light" onClick={() => onNewPassword(child)}>{t('parent.newPassword')}</Button>
       </div>
+      <div className="mt-2 flex flex-wrap justify-end gap-2">
+        <Button variant="light" onClick={() => onDownload(child)}>{t('parent.download')}</Button>
+        <Button variant="danger" onClick={() => onDelete(child)}>{t('parent.deleteData')}</Button>
+      </div>
     </Card>
   );
 };
@@ -146,6 +152,44 @@ const AddChildModal = ({ onClose, onAdded }) => {
   );
 };
 
+// Asks the parent to type a word (the child's name, or DELETE) before deleting anything.
+const ConfirmDelete = ({ title, text, word, onClose, onConfirm }) => {
+  const { t, dir } = useT();
+  const [typed, setTyped] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const matches = typed.trim().toLowerCase() === word.toLowerCase();
+  return (
+    <Modal title={title} onClose={onClose}>
+      <div dir={dir} className="space-y-3">
+        <Notice tone="error">{error}</Notice>
+        <p className="font-semibold text-[#4A5578]">{text}</p>
+        <Field label={word === 'DELETE' ? t('parent.typeDelete') : t('parent.typeName', { name: word })}>
+          <Input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
+        </Field>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="light" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button
+            variant="danger"
+            disabled={!matches || busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await onConfirm(typed.trim());
+              } catch (e) {
+                setError(e.message);
+                setBusy(false);
+              }
+            }}
+          >
+            {t('parent.deleteNow')}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
 // /parent: a parent's children, their progress, and email settings.
 const ParentDashboard = () => {
   const { t, dir } = useT();
@@ -153,6 +197,23 @@ const ParentDashboard = () => {
   const [notice, setNotice] = useState(null);
   const [adding, setAdding] = useState(false);
   const [login, setLogin] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const navigate = useNavigate();
+
+  const download = async (child) => {
+    try {
+      const res = await apiFetch(`/api/parent/children/${child._id}/export`);
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Download failed.');
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ai-tutor-${child.first_name || 'child'}-data.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setNotice({ tone: 'error', text: e.message });
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -224,7 +285,14 @@ const ParentDashboard = () => {
           ) : (
             <div className="grid gap-5 lg:grid-cols-2">
               {data.children.map((child, i) => (
-                <ChildCard key={child._id} child={child} color={CARD_COLORS[i % CARD_COLORS.length]} onNewPassword={newPassword} />
+                <ChildCard
+                key={child._id}
+                child={child}
+                color={CARD_COLORS[i % CARD_COLORS.length]}
+                onNewPassword={newPassword}
+                onDownload={download}
+                onDelete={(c) => setDeleting({ type: 'child', child: c })}
+              />
               ))}
             </div>
           )}
@@ -242,8 +310,48 @@ const ParentDashboard = () => {
               </div>
             </Card>
           )}
+
+          {data && (
+            <Card className="mt-6">
+              <p className="landing-display text-xl font-bold text-[#1E2A55]">{t('parent.privacy')}</p>
+              <p className="text-sm font-semibold text-[#4A5578]">
+                {t('parent.privacyText')}{' '}
+                <Link to="/child-safety" className="font-bold text-[#1E88FF] underline">{t('parent.childSafety')}</Link>
+              </p>
+              <div className="mt-3">
+                <Button variant="danger" onClick={() => setDeleting({ type: 'account' })}>{t('parent.deleteAccount')}</Button>
+              </div>
+            </Card>
+          )}
         </Page>
       </div>
+
+      {deleting?.type === 'child' && (
+        <ConfirmDelete
+          title={t('parent.deleteTitle', { name: deleting.child.first_name })}
+          text={t('parent.deleteText', { name: deleting.child.first_name })}
+          word={deleting.child.first_name}
+          onClose={() => setDeleting(null)}
+          onConfirm={async (typed) => {
+            await send(`/api/parent/children/${deleting.child._id}`, 'DELETE', { confirm: typed });
+            setNotice({ tone: 'success', text: t('parent.deleted', { name: deleting.child.first_name }) });
+            setDeleting(null);
+            load();
+          }}
+        />
+      )}
+      {deleting?.type === 'account' && (
+        <ConfirmDelete
+          title={t('parent.deleteAccount')}
+          text={t('parent.deleteAccountText')}
+          word="DELETE"
+          onClose={() => setDeleting(null)}
+          onConfirm={async (typed) => {
+            await send('/api/parent/account', 'DELETE', { confirm: typed });
+            await logout(navigate, '/');
+          }}
+        />
+      )}
 
       {adding && (
         <AddChildModal
