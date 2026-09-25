@@ -21,6 +21,10 @@ import AdminDashboard from "./components/AdminDashboard.jsx";
 import MyProgress from "./components/MyProgress.jsx";
 import WhatsAppButton from './components/WhatsAppButton.jsx';
 import ClassroomDemo from './components/ClassroomDemo.jsx';
+import CookieBanner from './components/CookieBanner.jsx';
+import PrivacyPolicy from './components/legal/PrivacyPolicy.jsx';
+import TermsOfService from './components/legal/TermsOfService.jsx';
+import CookiePolicy from './components/legal/CookiePolicy.jsx';
 
 function ProtectedRoute({ children, allow }) {
   const isLoggedIn = localStorage.getItem("user");
@@ -45,8 +49,9 @@ function App() {
     <Router>
       {showWelcome && <WelcomeMessage />}
 
-      {/* WhatsApp contact button on all pages */}
+      {/* WhatsApp button (landing page only) and cookie notice (public pages only) */}
       <WhatsAppButton />
+      <CookieBanner />
 
       <Routes>
         {/* Homepage & Auth */}
@@ -54,6 +59,10 @@ function App() {
         <Route path="/login" element={<LoginSignup />} />
         {/* Free 3D classroom demo (no login needed) */}
         <Route path="/try-classroom" element={<ClassroomDemo />} />
+        {/* Legal pages */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/cookies" element={<CookiePolicy />} />
 
         {/* Dashboards */}
         <Route
@@ -130,6 +139,9 @@ function App() {
         <Route path="/shapes-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><ShapesLesson /></ProtectedRoute>} />
         <Route path="/num-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><NumLesson /></ProtectedRoute>} />
         <Route path="/colors-lesson" element={<ProtectedRoute allow={["child", "teacher", "admin"]}><ColorsLesson /></ProtectedRoute>} />
+
+        {/* Unknown addresses go back to the landing page instead of a blank screen */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

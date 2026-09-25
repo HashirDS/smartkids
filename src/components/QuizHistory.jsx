@@ -69,7 +69,7 @@ const QuizHistory = ({ studentId, refreshTrigger = 0 }) => {
   };
 
   // --- PREPARE CHART DATA ---
-  const allCategories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'veg', 'animals', 'body', 'days'];
+  const allCategories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'flags', 'veg', 'animals', 'body', 'days'];
   
   const chartData = allCategories.map(catKey => {
     const catStat = stats[catKey];

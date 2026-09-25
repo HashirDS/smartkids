@@ -48,6 +48,16 @@ const QUIZZES = {
       { question: 'Which fruit is orange?', options: ['Blueberry', 'Orange', 'Kiwi', 'Apple'], answer: 'Orange' },
     ],
   },
+  flags: {
+    title: 'Flags Quiz',
+    questions: [
+      { question: 'Which country has this flag?', flag: 'pk', options: ['Pakistan', 'Turkey', 'China', 'Canada'], answer: 'Pakistan' },
+      { question: 'Which flag is this?', flag: 'ajk', options: ['Saudi Arabia', 'Azad Jammu and Kashmir', 'Brazil', 'Japan'], answer: 'Azad Jammu and Kashmir' },
+      { question: 'Which country has this flag?', flag: 'sa', options: ['Saudi Arabia', 'France', 'Italy', 'Australia'], answer: 'Saudi Arabia' },
+      { question: 'Which country has this flag?', flag: 'gb', options: ['Germany', 'Mexico', 'United Kingdom', 'Egypt'], answer: 'United Kingdom' },
+      { question: 'Which country has this flag?', flag: 'jp', options: ['Japan', 'China', 'Canada', 'Spain'], answer: 'Japan' },
+    ],
+  },
 };
 
 const formatWhen = (value) => {
@@ -198,6 +208,9 @@ const ChildQuiz = ({ kind = 'recommendation' }) => {
         <p className="text-sm font-semibold text-purple-600 mb-2">{quiz.title} · Question {index + 1} of {quiz.questions.length}</p>
         <div className="bg-white rounded-3xl shadow-lg p-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">{question.question}</h2>
+          {question.flag && /^[a-z]{2,3}$/.test(question.flag) && (
+            <img src={`/flags/${question.flag}.svg`} alt="Flag" className="mx-auto -mt-2 mb-6 aspect-[4/3] w-48 rounded-lg border border-gray-200 object-cover shadow-md" />
+          )}
           <div className="space-y-3">
             {(question.options || []).map((option) => {
               const showResult = Boolean(picked);

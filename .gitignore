@@ -28,3 +28,7 @@ model/
 backend/.env 
 accounts/ 
 .vercel
+
+# Python cache
+__pycache__/
+*.pyc

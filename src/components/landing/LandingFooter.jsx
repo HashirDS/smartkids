@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react';
 import AiTutorLogo, { AiTutorWordmark } from './AiTutorLogo';
 import { WhatsAppIcon } from '../WhatsAppButton';
@@ -18,6 +19,10 @@ const LandingFooter = () => {
           <p className="mt-3 leading-relaxed">
             AI Tutor helps young children learn letters, numbers, shapes and colors with friendly
             animated teachers, built for schools, academies and parents.
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-[#AEB6D6]">
+            Serving schools and families in Pakistan, Azad Jammu and Kashmir, Europe, the United States
+            and Canada.
           </p>
         </div>
 
@@ -43,17 +48,24 @@ const LandingFooter = () => {
       </div>
 
       <div className="border-t border-white/10">
-        <p className="mx-auto max-w-7xl px-4 py-3 text-center text-xs sm:px-6 md:text-left lg:px-8">
-          A product of <span className="font-bold text-white">XactGen</span> and{' '}
-          <a
-            href="https://datixai.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-bold text-[#FFC940] underline-offset-4 hover:underline"
-          >
-            Datix AI
-          </a>
-        </p>
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-3 text-xs sm:flex-row sm:px-6 lg:px-8">
+          <p>
+            A product of <span className="font-bold text-white">XactGen</span> and{' '}
+            <a
+              href="https://datixai.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-[#FFC940] underline-offset-4 hover:underline"
+            >
+              Datix AI
+            </a>
+          </p>
+          <nav aria-label="Legal" className="flex gap-4">
+            <Link to="/privacy" className="hover:text-white hover:underline">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-white hover:underline">Terms &amp; Conditions</Link>
+            <Link to="/cookies" className="hover:text-white hover:underline">Cookie Policy</Link>
+          </nav>
+        </div>
       </div>
     </footer>
   );

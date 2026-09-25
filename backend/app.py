@@ -19,8 +19,11 @@ from dotenv import load_dotenv
 from validators import email
 import base64
 import bcrypt
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson.objectid import ObjectId
+from pymongo import ReturnDocument
+from xml.sax.saxutils import escape as xml_escape
+import hmac
 from werkzeug.security import check_password_hash
 # --- NEW IMPORTS FOR AI & TTS ---
 import json
@@ -59,8 +62,21 @@ app = Flask(__name__)
 def home():
     return "SmartTutor Backend is running!"
 
-# Enable Cross-Origin Resource Sharing (CORS)
-CORS(app)
+# Reject oversized uploads (speech recordings are a few hundred KB at most).
+app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
+
+# Cross-Origin Resource Sharing: the live site calls its own API (same origin),
+# so only local development and any origins listed in CORS_ORIGINS are allowed.
+_cors_origins = [r"http://localhost(:\d+)?", r"http://127\.0\.0\.1(:\d+)?"]
+_cors_origins += [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
+CORS(app, origins=_cors_origins, expose_headers=["Visemes"])
+
+@app.after_request
+def add_security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    return response
 
 # Initialize the bcrypt extension
 bcrypt = Bcrypt(app)
@@ -78,6 +94,17 @@ else:
         print(f"Error connecting to MongoDB: {e}")
         db = None
 
+SESSION_DAYS = 30
+
+if db is not None:
+    try:
+        # Old sessions and rate-limit counters are removed by MongoDB automatically.
+        db.sessions.create_index("created_at", expireAfterSeconds=SESSION_DAYS * 24 * 3600)
+        db.sessions.create_index("token")
+        db.rate_limits.create_index("expires_at", expireAfterSeconds=0)
+    except Exception as e:
+        print(f"Could not create indexes: {e}")
+
 def issue_token(user_id, user_type):
     token = secrets.token_urlsafe(32)
     db.sessions.insert_one({
@@ -88,22 +115,70 @@ def issue_token(user_id, user_type):
     })
     return token
 
-def current_session():
-    if db is None:
-        return None
+def _bearer_token():
     header = request.headers.get("Authorization", "")
     if not header.startswith("Bearer "):
         return None
-    token = header[7:].strip()
+    return header[7:].strip() or None
+
+def current_session():
+    if db is None:
+        return None
+    token = _bearer_token()
     if not token:
         return None
-    return db.sessions.find_one({"token": token})
+    session = db.sessions.find_one({"token": token})
+    if not session:
+        return None
+    created = session.get("created_at")
+    if isinstance(created, datetime) and datetime.utcnow() - created > timedelta(days=SESSION_DAYS):
+        db.sessions.delete_one({"_id": session["_id"]})
+        return None
+    return session
 
 def reject_unless(*roles):
     session = current_session()
     if not session or session.get("user_type") not in roles:
         return jsonify({"message": "Unauthorized"}), 401
     return None
+
+def client_ip():
+    # Vercel sets x-real-ip / x-forwarded-for to the visitor's address.
+    ip = request.headers.get("X-Real-Ip") or request.headers.get("X-Forwarded-For", "").split(",")[0]
+    return (ip or request.remote_addr or "unknown").strip()
+
+def rate_limited(key, limit, window_seconds):
+    """Count a request against `key`; True once more than `limit` happen in the window."""
+    if db is None:
+        return False
+    bucket = int(time.time() // window_seconds)
+    try:
+        doc = db.rate_limits.find_one_and_update(
+            {"_id": f"{key}:{bucket}"},
+            {
+                "$inc": {"count": 1},
+                "$setOnInsert": {"expires_at": datetime.utcnow() + timedelta(seconds=window_seconds * 2)},
+            },
+            upsert=True,
+            return_document=ReturnDocument.AFTER,
+        )
+        return doc.get("count", 0) > limit
+    except Exception as e:
+        print(f"Rate limit check failed: {e}")
+        return False
+
+def too_many_requests():
+    return jsonify({"message": "Too many requests. Please wait a few minutes and try again."}), 429
+
+def json_body():
+    data = request.get_json(silent=True)
+    return data if isinstance(data, dict) else {}
+
+def clean_str(value, max_len):
+    """Return a trimmed string, or None when the value is not a plain string (blocks $-operator injection)."""
+    if not isinstance(value, str):
+        return None
+    return value.strip()[:max_len]
 
 # (Your API Key Code... UNCHANGED)
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') or os.getenv('VITE_GEMINI_API_KEY')
@@ -258,21 +333,29 @@ def check_pronunciation_match(expected, recognized):
     return round(similarity, 2), "low_similarity"
 
 # --- (Your Auth & Progress Endpoints - UNCHANGED) ---
+# New teacher accounts can see every student's progress, so an admin approves
+# them first (set TEACHER_APPROVAL_REQUIRED=0 to turn this off).
+TEACHER_APPROVAL_REQUIRED = os.getenv("TEACHER_APPROVAL_REQUIRED", "1") != "0"
+
 @app.route("/register", methods=["POST"])
+@app.route("/api/register", methods=["POST"])
 def register_user():
     if db is None: return jsonify({"message": "Database connection failed"}), 500
-    data = request.get_json()
-    first_name = data.get("first_name")
-    last_name = data.get("last_name")
-    username = data.get("username")
-    password = data.get("password")
-    user_type = data.get("user_type", "child").lower()
+    if rate_limited(f"register:{client_ip()}", 10, 3600):
+        return too_many_requests()
+    data = json_body()
+    first_name = clean_str(data.get("first_name"), 60)
+    last_name = clean_str(data.get("last_name"), 60)
+    username = clean_str(data.get("username"), 254)
+    password = data.get("password") if isinstance(data.get("password"), str) else None
+    user_type = (clean_str(data.get("user_type"), 20) or "child").lower()
     if not all([first_name, last_name, username, password]):
         return jsonify({"message": "All fields are required"}), 400
+    username = username.lower()
     if user_type not in ("child", "teacher"):
         return jsonify({"message": "Account type must be child or teacher"}), 400
-    if len(password) < 6:
-        return jsonify({"message": "Password must be at least 6 characters"}), 400
+    if len(password) < 6 or len(password) > 128:
+        return jsonify({"message": "Password must be 6 to 128 characters"}), 400
     if not email(username):
         return jsonify({"message": "Invalid email format"}), 400
     if db.users.find_one({"username": username}):
@@ -282,6 +365,10 @@ def register_user():
         "first_name": first_name, "last_name": last_name, "username": username,
         "password": hashed_password, "user_type": user_type, "created_at": datetime.utcnow()
     }
+    pending_teacher = user_type == "teacher" and TEACHER_APPROVAL_REQUIRED
+    if pending_teacher:
+        user["restricted"] = True
+        user["pending_approval"] = True
     try:
         result = db.users.insert_one(user)
         user_id = str(result.inserted_id)
@@ -295,7 +382,7 @@ def register_user():
             "child_name": f"{first_name} {last_name}",
             "completed_items": {
                 "abc": [], "numbers": [], "shapes": [],
-                "colors": [], "poems": [], "fruits": []
+                "colors": [], "poems": [], "fruits": [], "flags": []
             },
             "total_score": 0, "last_activity": None
         }
@@ -303,6 +390,11 @@ def register_user():
             db.progress.insert_one(initial_progress)
         except Exception as e:
             print(f"Warning: Failed to initialize progress doc: {e}")
+    if pending_teacher:
+        return jsonify({
+            "message": "Account created! An administrator will approve your teacher account, then you can log in.",
+            "pending_approval": True,
+        }), 202
     token = issue_token(user_id, user_type)
     return jsonify({
         "message": "User registered successfully",
@@ -315,24 +407,31 @@ def register_user():
 
 
 @app.route("/login", methods=["POST"])
+@app.route("/api/login", methods=["POST"])
 def login_user():
     if db is None:
         return jsonify({"message": "Database connection failed"}), 500
 
-    data = request.get_json()
-    username = data.get("username")
-    password = data.get("password")
+    data = json_body()
+    username = clean_str(data.get("username"), 254)
+    password = data.get("password") if isinstance(data.get("password"), str) else None
 
-    if not username or not password:
+    if not username or not password or len(password) > 128:
         return jsonify({"message": "Username and password are required"}), 400
+
+    # Slow down password guessing: per visitor and per account.
+    if rate_limited(f"login-ip:{client_ip()}", 30, 900) or rate_limited(f"login-user:{username.lower()}", 10, 900):
+        return too_many_requests()
 
     # ====================================================
     # 🔐 1. PREDEFINED ADMIN LOGIN (FROM .env)
     # ====================================================
-    ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
-    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+    ADMIN_EMAIL = os.getenv("ADMIN_EMAIL") or ""
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD") or ""
 
-    if username == ADMIN_EMAIL and password == ADMIN_PASSWORD:
+    if (ADMIN_EMAIL and ADMIN_PASSWORD
+            and hmac.compare_digest(username.lower().encode(), ADMIN_EMAIL.strip().lower().encode())
+            and hmac.compare_digest(password.encode(), ADMIN_PASSWORD.encode())):
         token = issue_token("admin_static_id", "admin")
         return jsonify({
             "message": "Admin login successful",
@@ -346,16 +445,24 @@ def login_user():
     # ====================================================
     # 👤 2. NORMAL USER LOGIN (MongoDB)
     # ====================================================
-    user = db.users.find_one({"username": username})
+    user = db.users.find_one({"username": {"$in": list({username, username.lower()})}})
 
     if not user:
         return jsonify({"message": "Invalid email or password"}), 401
 
-    if not bcrypt.check_password_hash(user["password"], password):
+    try:
+        password_ok = bcrypt.check_password_hash(user["password"], password)
+    except (ValueError, TypeError):
+        password_ok = False
+    if not password_ok:
         return jsonify({"message": "Invalid email or password"}), 401
 
     # 🚫 Restriction check
     if user.get("restricted", False):
+        if user.get("pending_approval"):
+            return jsonify({
+                "message": "Your teacher account is waiting for administrator approval."
+            }), 403
         return jsonify({
             "message": "Your account has been restricted by the administrator"
         }), 403
@@ -371,6 +478,14 @@ def login_user():
         "token": token,
     }), 200
 
+
+
+@app.route("/api/logout", methods=["POST"])
+def logout_user():
+    token = _bearer_token()
+    if db is not None and token:
+        db.sessions.delete_one({"token": token})
+    return jsonify({"message": "Logged out"}), 200
 
 
 def _progress_payload(progress_data):
@@ -442,16 +557,18 @@ def mark_item_complete():
     session = current_session()
     if not session or session.get("user_type") not in ("child", "teacher", "admin"):
         return jsonify({"message": "Unauthorized"}), 401
-    data = request.get_json()
-    user_id = data.get("user_id")
+    data = json_body()
+    user_id = clean_str(data.get("user_id"), 24)
     if session.get("user_type") == "child" and session.get("user_id") != str(user_id):
         return jsonify({"message": "You can only update your own progress"}), 403
-    category = data.get("category")
-    item = data.get("item")
+    category = clean_str(data.get("category"), 20)
+    item = clean_str(data.get("item"), 120)
     if not all([user_id, category, item]):
         return jsonify({"message": "Missing user_id, category, or item"}), 400
+    if not ObjectId.is_valid(user_id):
+        return jsonify({"message": "Invalid user ID"}), 400
 
-    valid_categories = ["abc", "numbers", "shapes", "colors", "poems", "fruits"]
+    valid_categories = ["abc", "numbers", "shapes", "colors", "poems", "fruits", "flags"]
     if category not in valid_categories:
         print(f"Invalid category received: {category}")
         return jsonify({"message": f"Invalid category: {category}"}), 400
@@ -540,9 +657,12 @@ def is_response_valid(user_prompt, response_text):
 
 @app.route('/api/ai', methods=['GET'])
 def ask_ai():
-    question = request.args.get('question', '').strip()
+    question = request.args.get('question', '').strip()[:500]
     if not question:
         return jsonify({"error": "Missing 'question' parameter"}), 400
+    # Open to visitors for the free classroom demo, so cap how often one visitor can call the AI.
+    if rate_limited(f"ai:{client_ip()}", 40, 600):
+        return too_many_requests()
 
     # ---------------------------------------------------------
     # SYSTEM PROMPT (Shared by both models for consistency)
@@ -640,9 +760,13 @@ def get_tts():
     if not SPEECH_KEY or not SPEECH_REGION:
         return Response("TTS keys are not configured on the server.", status=500)
 
-    text = request.args.get("text")
+    text = (request.args.get("text") or "").strip()[:1200]
     if not text:
         return Response("Missing text parameter for TTS.", status=400)
+    if rate_limited(f"tts:{client_ip()}", 60, 600):
+        return Response("Too many requests. Please wait a few minutes.", status=429)
+    # Escape the text so it cannot inject extra SSML tags.
+    text = xml_escape(text)
 
     # ✅ NEW: read teacher (DEFAULT female)
     teacher = request.args.get("teacher", "female")
@@ -652,6 +776,37 @@ def get_tts():
         voice_name = "en-US-GuyNeural"
     else:
         voice_name = "en-US-JennyNeural"
+
+    # Without the Azure Speech SDK (kept out of the Vercel bundle for size),
+    # use the Azure TTS REST API: same voices, but no lip-sync visemes.
+    if speechsdk is None:
+        ssml = (
+            '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">'
+            f'<voice name="{voice_name}"><prosody rate="-20.0%">{text}</prosody></voice></speak>'
+        )
+        try:
+            tts_res = requests.post(
+                f"https://{SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1",
+                headers={
+                    "Ocp-Apim-Subscription-Key": SPEECH_KEY,
+                    "Content-Type": "application/ssml+xml",
+                    "X-Microsoft-OutputFormat": "audio-16khz-32kbitrate-mono-mp3",
+                    "User-Agent": "ai-tutor",
+                },
+                data=ssml.encode("utf-8"),
+                timeout=20,
+            )
+            if tts_res.status_code != 200:
+                print(f"Azure TTS REST error {tts_res.status_code}: {tts_res.text[:200]}")
+                return Response("Speech is not available right now.", status=502)
+            return Response(
+                tts_res.content,
+                mimetype="audio/mpeg",
+                headers={"Visemes": "[]", "Content-Disposition": "inline; filename=tts.mp3"},
+            )
+        except Exception as e:
+            print(f"Azure TTS REST failed: {e}")
+            return Response("Speech is not available right now.", status=502)
 
     try:
         # 1. Speech Configuration (UNCHANGED except voice)
@@ -714,18 +869,17 @@ def get_tts():
 
         elif result.reason == speechsdk.ResultReason.Canceled:
             cancellation = result.cancellation_details
-            error_msg = f"Speech synthesis canceled: {cancellation.reason}"
-            if cancellation.reason == speechsdk.CancellationReason.Error:
-                error_msg += f" Error details: {cancellation.error_details}"
-            return Response(error_msg, status=500)
+            print(f"Speech synthesis canceled: {cancellation.reason} {cancellation.error_details}")
+            return Response("Speech is not available right now.", status=500)
 
         else:
-            return Response(f"Unexpected result reason: {result.reason}", status=500)
+            print(f"Unexpected TTS result reason: {result.reason}")
+            return Response("Speech is not available right now.", status=500)
 
     except Exception as e:
         import traceback
         print(traceback.format_exc())
-        return Response(f"Internal TTS server error: {str(e)}", status=500)
+        return Response("Speech is not available right now.", status=500)
 
     
 
@@ -739,6 +893,12 @@ def analyze_speech():
 
     temp_path = None
 
+    session = current_session()
+    if not session or session.get("user_type") not in ("child", "teacher", "admin"):
+        return jsonify({"success": False, "error": "Unauthorized", "reward": "Please log in again.", "points_added": 0}), 401
+    if rate_limited(f"speech:{session.get('user_id')}", 60, 600):
+        return too_many_requests()
+
     try:
         if not DEEPGRAM_API_KEY:
             return jsonify({"error": "Deepgram API key missing"}), 500
@@ -746,10 +906,13 @@ def analyze_speech():
         # ----------------------------
         # 1. Read Inputs
         # ----------------------------
-        expected_text = request.form.get("expected_text", "").strip()
+        expected_text = request.form.get("expected_text", "").strip()[:100]
         audio_file = request.files.get("audio")
-        user_id = request.form.get("user_id")
+        # Points always go to the logged-in child; the user_id field sent by the browser is ignored.
+        user_id = session.get("user_id") if session.get("user_type") == "child" else None
         lesson_type = request.form.get("lesson_type", "colors")
+        if lesson_type not in ("abc", "numbers", "shapes", "colors", "fruits", "poems", "flags", "drawing"):
+            lesson_type = "other"
 
         # Validate
         if not audio_file:
@@ -771,7 +934,7 @@ def analyze_speech():
         # ----------------------------
         # 2. Save .webm file temporarily
         # ----------------------------
-        temp_filename = f"recording_{int(time.time())}.webm"
+        temp_filename = f"recording_{secrets.token_hex(8)}.webm"
         temp_path = os.path.join(tempfile.gettempdir(), temp_filename)
         audio_file.save(temp_path)
 
@@ -853,7 +1016,7 @@ def analyze_speech():
         # ----------------------------
         # 5. Save progress in DB
         # ----------------------------
-        if user_id:
+        if user_id and db is not None and ObjectId.is_valid(str(user_id)):
             try:
                 db.progress.update_one(
                     {"_id": ObjectId(user_id)},
@@ -942,7 +1105,7 @@ def analyze_speech():
 
         return jsonify({
             "success": False,
-            "error": str(e),
+            "error": "Speech analysis failed",
             "reward": "⚠ Something went wrong!",
             "points_added": 0
         }), 500
@@ -956,11 +1119,16 @@ def analyze_speech():
 # ✅ NEW: Free & Stable Audio Generator using gTTS
 @app.route('/generate-audio', methods=['POST'])
 def generate_audio():
+    denied = reject_unless("child", "teacher", "admin")
+    if denied:
+        return denied
     try:
-        data = request.json
-        text = data.get('text')
+        data = json_body()
+        text = clean_str(data.get('text'), 1500)
         if not text:
             return jsonify({"error": "No text provided"}), 400
+        if rate_limited(f"audio:{client_ip()}", 60, 600):
+            return too_many_requests()
 
         from gtts import gTTS as GoogleTTS
         tts = GoogleTTS(text=text, lang='en', slow=False)
@@ -981,7 +1149,7 @@ def generate_audio():
         
     except Exception as e:
         print(f"Audio generation error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Audio generation failed"}), 500
 
 # ---------------- POEM GENERATION (LLAMA-3 via GROQ) ----------------
 
@@ -993,12 +1161,17 @@ if GROQ_API_KEY and groq_client is None:
 
 @app.route('/generate-poem', methods=['POST'])
 def generate_poem():
+    denied = reject_unless("child", "teacher", "admin")
+    if denied:
+        return denied
     try:
-        data = request.get_json()
-        topic = data.get('topic')
+        data = json_body()
+        topic = clean_str(data.get('topic'), 100)
 
         if not topic:
             return jsonify({"error": "No topic provided"}), 400
+        if rate_limited(f"poem:{client_ip()}", 30, 600):
+            return too_many_requests()
 
         # 🎯 SYSTEM PROMPT (Kid-safe, viva-ready)
         system_prompt = """
@@ -1131,16 +1304,21 @@ def chat_assistant():
     Smart Learning System Chatbot - Powered by Llama 3 (via Groq)
     Fallback: Gemini Flash -> Rule Based
     """
+    denied = reject_unless("child", "teacher", "admin")
+    if denied:
+        return denied
     try:
-        data = request.get_json()
-        user_message = data.get('message', '').strip()
-        context = data.get('context', {})
-        
+        data = json_body()
+        user_message = (clean_str(data.get('message'), 500) or '')
+        context = data.get('context') if isinstance(data.get('context'), dict) else {}
+
         if not user_message:
             return jsonify({"error": "No message provided"}), 400
+        if rate_limited(f"chat:{client_ip()}", 40, 600):
+            return too_many_requests()
 
         # Get context
-        current_page = context.get('current_page', 'Home')
+        current_page = clean_str(context.get('current_page'), 40) or 'Home'
         
         # --- 1. DEFINE THE PERSONA (SYSTEM PROMPT) ---
         system_prompt = f"""
@@ -1337,7 +1515,7 @@ def submit_assessment():
 
 
 
-QUIZ_CATEGORIES = ["abc", "numbers", "shapes", "colors", "fruits"]
+QUIZ_CATEGORIES = ["abc", "numbers", "shapes", "colors", "fruits", "flags"]
 
 def _lesson_count(user_id, category):
     if not ObjectId.is_valid(str(user_id)):
@@ -1612,8 +1790,8 @@ def get_adaptive_questions(user_id):
        
         history = user.get('quiz_history', [])
        
-        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'veg', 'animals', 'body', 'days']
-       
+        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'flags', 'veg', 'animals', 'body', 'days']
+
         # ⭐ DEFINE MANDATORY BASICS ⭐
         core_topics = ['abc', 'numbers']
 
@@ -1682,7 +1860,8 @@ def recommend_quiz(user_id):
             "focus_areas": recommended_topics
         }), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Recommendation error: {e}")
+        return jsonify({"error": "Could not build recommendations"}), 500
 
 
 # ====================================================================
@@ -1716,7 +1895,7 @@ def get_quiz_analytics(user_id):
             if '_id' in q_copy: q_copy['_id'] = str(q_copy['_id'])
             clean_history.append(q_copy)
         
-        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'veg', 'animals', 'body', 'days']
+        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'flags', 'veg', 'animals', 'body', 'days']
         category_stats = {cat: {'attempts': 0, 'total_score': 0, 'total_percentage': 0, 'avg_score': 0, 'avg_percentage': 0} for cat in all_categories}
 
         for quiz in clean_history:
@@ -1782,7 +1961,7 @@ def get_quiz_analytics(user_id):
 
     except Exception as e:
         print(f"Analytics Error: {e}")
-        return jsonify({"message": str(e)}), 500
+        return jsonify({"message": "Could not load quiz analytics"}), 500
 
 # ========================================================
 # 🛡️ SECURITY: FLASK-BCRYPT FIXED
@@ -1793,9 +1972,14 @@ def verify_student_access():
         denied = reject_unless("teacher", "admin")
         if denied:
             return denied
-        data = request.json
-        user_id = data.get('user_id')
-        input_password = str(data.get('password')).strip()
+        data = json_body()
+        user_id = clean_str(data.get('user_id'), 24)
+        input_password = str(data.get('password'))[:128].strip()
+        if not user_id or not ObjectId.is_valid(user_id):
+            return jsonify({"success": False, "message": "User not found"}), 404
+        # Stop guessing a student's password from a teacher account.
+        if rate_limited(f"verify:{user_id}", 10, 900):
+            return too_many_requests()
 
         # FETCH USER
         user = db.users.find_one({"_id": ObjectId(user_id)})
@@ -1904,9 +2088,11 @@ def generate_custom_ai_quiz():
     if denied:
         return denied
     try:
-        data = request.json
-        topic = data.get('topic', 'mixed')
-        difficulty = data.get('difficulty', 'Easy')
+        data = json_body()
+        topic = clean_str(data.get('topic'), 80) or 'mixed'
+        difficulty = clean_str(data.get('difficulty'), 20) or 'Easy'
+        if rate_limited(f"quizgen:{client_ip()}", 30, 600):
+            return too_many_requests()
 
         # 1. Try AI Generation
         generated_questions = generate_ai_quiz(topic, difficulty)
@@ -1918,7 +2104,7 @@ def generate_custom_ai_quiz():
 
     except Exception as e:
         print(f"Endpoint Error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Quiz generation failed"}), 500
 # ==========================================================
 # ADMIN DASHBOARD: OVERVIEW STATS
 # ==========================================================
@@ -1997,6 +2183,7 @@ def admin_delete_user(user_id):
 
         db.users.delete_one({"_id": ObjectId(user_id)})
         db.progress.delete_one({"_id": ObjectId(user_id)})
+        db.sessions.delete_many({"user_id": str(user_id)})
 
         return jsonify({"message": "User deleted successfully"}), 200
 
@@ -2021,10 +2208,14 @@ def admin_toggle_restrict(user_id):
 
         new_status = not user.get("restricted", False)
 
-        db.users.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"restricted": new_status}}
-        )
+        update = {"$set": {"restricted": new_status}}
+        if not new_status:
+            # Unrestricting a new teacher also approves the account.
+            update["$unset"] = {"pending_approval": ""}
+        db.users.update_one({"_id": ObjectId(user_id)}, update)
+        if new_status:
+            # Sign the user out everywhere straight away.
+            db.sessions.delete_many({"user_id": str(user_id)})
 
         return jsonify({
             "message": "User restriction updated",
@@ -2036,6 +2227,11 @@ def admin_toggle_restrict(user_id):
         return jsonify({"error": "Failed to update restriction"}), 500
 @app.route("/api/user/lesson-access/<user_id>", methods=["GET"])
 def get_lesson_access(user_id):
+    session = current_session()
+    if not session:
+        return jsonify({"message": "Unauthorized"}), 401
+    if session.get("user_type") == "child" and session.get("user_id") != str(user_id):
+        return jsonify({"message": "Forbidden"}), 403
     try:
         user = db.users.find_one({"_id": ObjectId(user_id)})
         if not user:
@@ -2061,17 +2257,23 @@ def update_lesson_restrictions():
     denied = reject_unless("admin")
     if denied:
         return denied
-    data = request.json
-    restricted_lessons = data.get("restricted_lessons", [])
+    data = json_body()
+    raw_lessons = data.get("restricted_lessons", [])
+    if not isinstance(raw_lessons, list):
+        return jsonify({"message": "restricted_lessons must be a list"}), 400
+    restricted_lessons = [str(item)[:30] for item in raw_lessons[:30] if isinstance(item, str)]
     user_id = data.get("user_id")
 
     # ✅ PER USER
     if user_id:
-        db.users.update_one(
+        if not isinstance(user_id, str) or not ObjectId.is_valid(user_id):
+            return jsonify({"message": "Invalid user ID"}), 400
+        result = db.users.update_one(
             {"_id": ObjectId(user_id)},
             {"$set": {"restricted_lessons": restricted_lessons}},
-            upsert=True
         )
+        if result.matched_count == 0:
+            return jsonify({"message": "User not found"}), 404
         return jsonify({"message": "User lesson access updated"})
 
     # ✅ GLOBAL (ALL CHILDREN)
@@ -2122,5 +2324,6 @@ if __name__ == "__main__":
     print("Browser TTS: ✅ Always available")
     print(f"Groq Speech API: {'✅ Available' if groq_client else '❌ Not configured'}")
     print(f"Phi-2 model: Available")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # The debug console allows running code, so it is only on when FLASK_DEBUG=1.
+    app.run(host="127.0.0.1", port=5000, debug=os.getenv("FLASK_DEBUG") == "1")
 

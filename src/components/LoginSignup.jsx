@@ -110,7 +110,7 @@ const LoginSignup = () => {
                 user_type
             };
 
-            const response = await apiFetch('/register', {
+            const response = await apiFetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -118,7 +118,11 @@ const LoginSignup = () => {
 
             const data = await response.json();
 
-            if (response.ok) {
+            if (response.ok && data.pending_approval) {
+                // Teacher accounts wait for an admin to approve them.
+                setSuccessMessage(data.message);
+                setIsLogin(true);
+            } else if (response.ok) {
                 // ✅ REQUIRED FOR ROUTE PROTECTION
                 saveSession(data);
 
@@ -154,7 +158,7 @@ const LoginSignup = () => {
                 password
             };
 
-            const response = await apiFetch('/login', {
+            const response = await apiFetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

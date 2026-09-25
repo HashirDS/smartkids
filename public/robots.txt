@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /child-dashboard
+Disallow: /teacher-dashboard
+Disallow: /admin-dashboard
+Disallow: /my-progress
+Disallow: /ai-teacher
+Disallow: /teaching
+Disallow: /api/
+
+Sitemap: https://smarttutor-olive.vercel.app/sitemap.xml

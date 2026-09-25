@@ -7,6 +7,7 @@ const LABELS = {
   shapes: 'Shapes',
   colors: 'Colors',
   fruits: 'Fruits',
+  flags: 'Flags',
 };
 
 const formatWhen = (value) => {
