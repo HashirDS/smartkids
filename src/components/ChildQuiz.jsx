@@ -58,6 +58,36 @@ const QUIZZES = {
       { question: 'Which country has this flag?', flag: 'jp', options: ['Japan', 'China', 'Canada', 'Spain'], answer: 'Japan' },
     ],
   },
+  islamic: {
+    title: 'Islamic Studies Quiz',
+    questions: [
+      { question: 'How many pillars does Islam have?', options: ['3', '5', '7', '10'], answer: '5' },
+      { question: 'How many times a day do Muslims pray?', options: ['2', '3', '5', '7'], answer: '5' },
+      { question: 'Which prayer is at dawn?', options: ['Fajr', 'Asr', 'Maghrib', 'Isha'], answer: 'Fajr' },
+      { question: 'What do we make before we pray?', options: ['Wudu', 'Breakfast', 'A drawing', 'A kite'], answer: 'Wudu' },
+      { question: 'Which Prophet built the ark? 🚢', options: ['Prophet Nuh', 'Prophet Musa', 'Prophet Yunus', 'Prophet Adam'], answer: 'Prophet Nuh' },
+    ],
+  },
+  science: {
+    title: 'Science Quiz',
+    questions: [
+      { question: 'We see with our...? 👀', options: ['Eyes', 'Ears', 'Nose', 'Hands'], answer: 'Eyes' },
+      { question: 'We hear with our...?', options: ['Tongue', 'Ears', 'Feet', 'Eyes'], answer: 'Ears' },
+      { question: 'What falls from the clouds? 🌧️', options: ['Rain', 'Stars', 'Leaves', 'Sand'], answer: 'Rain' },
+      { question: 'What do we see in the sky at night? 🌙', options: ['Moon', 'Rainbow', 'Sun', 'Kite'], answer: 'Moon' },
+      { question: 'What do plants need to grow?', options: ['Water and sunlight', 'Toys', 'Sweets', 'Shoes'], answer: 'Water and sunlight' },
+    ],
+  },
+  animals: {
+    title: 'Animals Quiz',
+    questions: [
+      { question: 'Which animal says moo? 🐄', options: ['Cow', 'Cat', 'Duck', 'Lion'], answer: 'Cow' },
+      { question: 'Which animal says quack?', options: ['Dog', 'Duck', 'Horse', 'Goat'], answer: 'Duck' },
+      { question: 'Which animal has a very long neck?', options: ['Giraffe', 'Rabbit', 'Fish', 'Hen'], answer: 'Giraffe' },
+      { question: 'Which animal lives in the sea?', options: ['Whale', 'Tiger', 'Sheep', 'Parrot'], answer: 'Whale' },
+      { question: 'Which animal roars? 🦁', options: ['Lion', 'Cat', 'Sparrow', 'Turtle'], answer: 'Lion' },
+    ],
+  },
   // `script` shows the letter and options in the Urdu / Arabic font; answers are tapped, not spoken.
   urdu: {
     title: 'Urdu Alphabet Quiz',

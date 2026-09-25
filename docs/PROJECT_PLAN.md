@@ -102,12 +102,17 @@ Each module is built, tested (automated + clicked through), then pushed to the
 - **To do before going live:** a native Urdu speaker and an Arabic/Qaida teacher review the text and letter names.
 - Speaking practice (microphone) for Urdu/Arabic letters is not in this version.
 
-### M4 – New content ⬜
-- **Islamic studies** (first version, needs a scholar's review): Five Pillars, Wudu steps, names of the
-  five prayers; some of Allah's 99 names with meanings; short Prophets' stories for kids.
-- **Science** for early years: my body, day and night, weather, plants.
-- **Animals**: animal names and sounds, farm/wild/sea.
-- Every lesson plugs into tiles, menu, voice commands, progress, quizzes, charts, restrictions.
+### M4 – New content ✅
+- Three new English lessons with topic tabs and picture cards; tap to hear, "I learned it!" saves progress.
+  No separate Urdu/Arabic pages for these (by decision); only their names appear in the Urdu/Arabic menus.
+- **Islamic Studies** (35 cards): Five Pillars, Wudu steps, the five prayers with rakat, ten of Allah's names
+  (with Arabic), short stories of Prophets Adam, Nuh, Ibrahim, Musa, Yunus and Muhammad ﷺ.
+  No pictures of people or prophets. **Needs a scholar's review before children use it**: staff see a note
+  on the lesson, and schools can switch it off in Lesson access until then. Content: `src/data/topics.js`.
+- **Science** (23 cards): my body and senses, weather, day and night, plants.
+- **Animals** (22 cards): farm, wild (incl. snow leopard of Pakistan), sea, pets and birds, with their sounds.
+- Each has a 5-question quiz and is linked to tiles, Lessons menu, voice commands ("Islamic", "Science",
+  "Animals"), progress, teacher charts, restrictions, parent page and weekly email.
 
 ### M5 – Motivation: stickers, badges, streaks ⬜
 - Stickers for each item learned, badges for milestones (e.g. "ABC Star", "10-day streak"),
@@ -158,3 +163,4 @@ Features that need a key stay switched off until the key is added; nothing break
 | 2026-09-25 | M1 | Schools, classes (Preschool/Nursery/Prep/KG1) with class codes, principal role and dashboard, admin Schools page, teacher My Classes tab, staff add students with parent details (login shown once), move students, reset passwords, school-level lesson access, all teacher/principal APIs scoped to their own classes/school, existing users moved into a Default school |
 | 2026-09-25 | M2 | Parent role and dashboard, /join with class code and consent, sibling add, automatic parent logins from staff, weekly email via Resend + Vercel Cron with unsubscribe, admin parent links; fixed a visibility rule so a parent can only ever see their own children; role label moved from navbar into the ☰ menu |
 | 2026-09-25 | M3 | English/Urdu/Arabic switch with right-to-left layout for students and parents, Urdu alphabet and Arabic Qaida lessons with Azure Urdu/Arabic voices, Urdu and Arabic quizzes, new lessons linked to menus, voice, progress, charts, restrictions and parent reports |
+| 2026-09-25 | M4 | Islamic Studies (pending scholar review), Science and Animals lessons with quizzes, linked everywhere; friendly lesson names in quiz recommendations |

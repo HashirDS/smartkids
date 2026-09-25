@@ -25,7 +25,7 @@ from pymongo import ReturnDocument
 from xml.sax.saxutils import escape as xml_escape
 from schools import (register_school_routes, can_view_student, visible_student_filter,
                      visible_student_ids, assign_to_default, migrate_existing_users)
-from parents import register_parent_routes
+from parents import CATEGORY_LABELS, register_parent_routes
 import hmac
 from werkzeug.security import check_password_hash
 # --- NEW IMPORTS FOR AI & TTS ---
@@ -391,7 +391,7 @@ def register_user():
             "child_name": f"{first_name} {last_name}",
             "completed_items": {
                 "abc": [], "numbers": [], "shapes": [],
-                "colors": [], "poems": [], "fruits": [], "flags": [], "urdu": [], "arabic": []
+                "colors": [], "poems": [], "fruits": [], "flags": [], "urdu": [], "arabic": [], "islamic": [], "science": [], "animals": []
             },
             "total_score": 0, "last_activity": None
         }
@@ -581,7 +581,7 @@ def mark_item_complete():
     if not ObjectId.is_valid(user_id):
         return jsonify({"message": "Invalid user ID"}), 400
 
-    valid_categories = ["abc", "numbers", "shapes", "colors", "poems", "fruits", "flags", "urdu", "arabic"]
+    valid_categories = ["abc", "numbers", "shapes", "colors", "poems", "fruits", "flags", "urdu", "arabic", "islamic", "science", "animals"]
     if category not in valid_categories:
         print(f"Invalid category received: {category}")
         return jsonify({"message": f"Invalid category: {category}"}), 400
@@ -934,7 +934,7 @@ def analyze_speech():
         # Points always go to the logged-in child; the user_id field sent by the browser is ignored.
         user_id = session.get("user_id") if session.get("user_type") == "child" else None
         lesson_type = request.form.get("lesson_type", "colors")
-        if lesson_type not in ("abc", "numbers", "shapes", "colors", "fruits", "poems", "flags", "urdu", "arabic", "drawing"):
+        if lesson_type not in ("abc", "numbers", "shapes", "colors", "fruits", "poems", "flags", "urdu", "arabic", "islamic", "science", "animals", "drawing"):
             lesson_type = "other"
 
         # Validate
@@ -1555,7 +1555,7 @@ def submit_assessment():
 
 
 
-QUIZ_CATEGORIES = ["abc", "numbers", "shapes", "colors", "fruits", "flags", "urdu", "arabic"]
+QUIZ_CATEGORIES = ["abc", "numbers", "shapes", "colors", "fruits", "flags", "urdu", "arabic", "islamic", "science", "animals"]
 
 def _lesson_count(user_id, category):
     if not ObjectId.is_valid(str(user_id)):
@@ -1727,11 +1727,11 @@ def _recommend_quiz(user_id):
         return None
     row = sorted(learned, key=urgency)[0]
     if row["quiz_attempts"] == 0:
-        reason = f"You already learned {row['lesson_count']} {row['category']} items, and you have not taken this quiz yet."
+        reason = f"You already learned {row['lesson_count']} {CATEGORY_LABELS.get(row['category'], row['category'])} items, and you have not taken this quiz yet."
     elif (row["last_percentage"] or 0) < 80:
-        reason = f"Your last {row['category']} score was {row['last_score']}/{row['last_total']}. This quiz practices that again."
+        reason = f"Your last {CATEGORY_LABELS.get(row['category'], row['category'])} score was {row['last_score']}/{row['last_total']}. This quiz practices that again."
     else:
-        reason = f"You are doing well in {row['category']}. This short quiz checks that it stuck."
+        reason = f"You are doing well in {CATEGORY_LABELS.get(row['category'], row['category'])}. This short quiz checks that it stuck."
     return {
         "category": row["category"],
         "status": "recommended",
@@ -1834,7 +1834,7 @@ def get_adaptive_questions(user_id):
        
         history = user.get('quiz_history', [])
        
-        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'flags', 'urdu', 'arabic', 'veg', 'animals', 'body', 'days']
+        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'flags', 'urdu', 'arabic', 'islamic', 'science', 'veg', 'animals', 'body', 'days']
 
         # ⭐ DEFINE MANDATORY BASICS ⭐
         core_topics = ['abc', 'numbers']
@@ -1943,7 +1943,7 @@ def get_quiz_analytics(user_id):
             if '_id' in q_copy: q_copy['_id'] = str(q_copy['_id'])
             clean_history.append(q_copy)
         
-        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'flags', 'urdu', 'arabic', 'veg', 'animals', 'body', 'days']
+        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'flags', 'urdu', 'arabic', 'islamic', 'science', 'veg', 'animals', 'body', 'days']
         category_stats = {cat: {'attempts': 0, 'total_score': 0, 'total_percentage': 0, 'avg_score': 0, 'avg_percentage': 0} for cat in all_categories}
 
         for quiz in clean_history:

@@ -35,7 +35,7 @@ const DashboardCard = ({ title, imageUrl, glyph, glyphFont, onSelect, colorClass
     
       {/* Use a placeholder image generator */}
       {glyph ? (
-        <span dir="rtl" className={`mb-2 text-5xl leading-[1.6] drop-shadow-lg sm:text-6xl ${glyphFont}`} aria-hidden="true">{glyph}</span>
+        <span dir="rtl" className={`mb-2 whitespace-nowrap text-4xl leading-[1.6] drop-shadow-lg sm:text-5xl ${glyphFont || ''}`} aria-hidden="true">{glyph}</span>
       ) : (
         <img
           src={imageUrl} // Use the passed imageUrl
@@ -69,6 +69,9 @@ const DashboardHome = ({ onSelectContent }) => {
     { id: 'flags', title: 'Flags', imageUrl: '/flags/flags-tile.svg', color: 'bg-gradient-to-br from-teal-400 to-teal-600' },
     { id: 'urdu', glyph: 'ا ب پ', glyphFont: 'font-urdu', color: 'bg-gradient-to-br from-sky-400 to-blue-600' },
     { id: 'arabic', glyph: 'أ ب ت', glyphFont: 'font-arabic', color: 'bg-gradient-to-br from-emerald-400 to-green-600' },
+    { id: 'islamic', glyph: '🕌', color: 'bg-gradient-to-br from-green-500 to-emerald-700' },
+    { id: 'science', glyph: '🔬', color: 'bg-gradient-to-br from-violet-400 to-purple-600' },
+    { id: 'animals', glyph: '🦁', color: 'bg-gradient-to-br from-orange-400 to-amber-600' },
      // Add more cards here if needed
   ];
   // --- End of Combined Data ---

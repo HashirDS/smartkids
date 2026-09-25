@@ -37,6 +37,15 @@ const VoiceEnabledWrapper = ({ children }) => {
       case "arabic":
         navigate("/arabic-lesson");
         break;
+      case "islamic":
+        navigate("/islamic-lesson");
+        break;
+      case "science":
+        navigate("/science-lesson");
+        break;
+      case "animals":
+        navigate("/animals-lesson");
+        break;
       case "teacher":
         navigate("/teacher-dashboard");
         break;

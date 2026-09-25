@@ -11,6 +11,7 @@ import FruitLesson from './FruitLesson';
 import FlagsLesson from './FlagsLesson';
 import UrduLesson from './lessons/UrduLesson';
 import ArabicLesson from './lessons/ArabicLesson';
+import TopicLesson from './lessons/TopicLesson';
 import { useT } from '../i18n';
 import ChildQuiz from './ChildQuiz';
 import { API_URL, apiFetch } from '../api';
@@ -94,6 +95,10 @@ const ChildDashboard = () => {
         return <UrduLesson />;
       case 'arabic':
         return <ArabicLesson />;
+      case 'islamic':
+      case 'science':
+      case 'animals':
+        return <TopicLesson key={activeContent} lesson={activeContent} />;
       case 'quiz':
         return <ChildQuiz kind="recommendation" />;
       case 'quiz-teacher':

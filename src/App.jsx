@@ -19,6 +19,7 @@ import ColorsLesson from './components/ColorsLesson.jsx';
 import FlagsLesson from './components/FlagsLesson.jsx';
 import UrduLesson from './components/lessons/UrduLesson.jsx';
 import ArabicLesson from './components/lessons/ArabicLesson.jsx';
+import TopicLesson from './components/lessons/TopicLesson.jsx';
 import AdminDashboard from "./components/AdminDashboard.jsx";
 import MyProgress from "./components/MyProgress.jsx";
 import WhatsAppButton from './components/WhatsAppButton.jsx';
@@ -139,6 +140,9 @@ function App() {
         <Route path="/flags-lesson" element={<ProtectedRoute allow={["child", "teacher", "principal", "admin"]}><FlagsLesson /></ProtectedRoute>} />
         <Route path="/urdu-lesson" element={<ProtectedRoute allow={["child", "teacher", "principal", "admin"]}><UrduLesson /></ProtectedRoute>} />
         <Route path="/arabic-lesson" element={<ProtectedRoute allow={["child", "teacher", "principal", "admin"]}><ArabicLesson /></ProtectedRoute>} />
+        {['islamic', 'science', 'animals'].map((lesson) => (
+          <Route key={lesson} path={`/${lesson}-lesson`} element={<ProtectedRoute allow={["child", "teacher", "principal", "admin"]}><TopicLesson lesson={lesson} /></ProtectedRoute>} />
+        ))}
 
         {/* Schools */}
         <Route path="/admin/schools" element={<ProtectedRoute allow={["admin"]}><AdminSchools /></ProtectedRoute>} />

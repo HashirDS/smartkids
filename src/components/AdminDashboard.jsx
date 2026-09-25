@@ -25,6 +25,9 @@ const LESSONS = [
   { key: "flags", label: "Flags" },
   { key: "urdu", label: "Urdu Alphabet" },
   { key: "arabic", label: "Arabic Qaida" },
+  { key: "islamic", label: "Islamic Studies" },
+  { key: "science", label: "Science" },
+  { key: "animals", label: "Animals" },
   { key: "quiz", label: "Quiz" },
 ];
 

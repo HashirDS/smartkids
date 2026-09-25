@@ -19,7 +19,8 @@ from schools import LEVEL_LABELS, can_view_student, create_student, kid_password
 
 CATEGORY_LABELS = {"abc": "ABC", "numbers": "Numbers", "shapes": "Shapes", "colors": "Colours",
                    "fruits": "Fruits", "poems": "Poems", "flags": "Flags",
-                   "urdu": "Urdu", "arabic": "Arabic Qaida"}
+                   "urdu": "Urdu", "arabic": "Arabic Qaida",
+                   "islamic": "Islamic Studies", "science": "Science", "animals": "Animals"}
 RESEND_URL = "https://api.resend.com/emails/batch"
 BATCH_SIZE = 100          # Resend's batch limit
 MAX_PARENTS_PER_RUN = 1000
