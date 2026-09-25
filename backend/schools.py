@@ -74,6 +74,74 @@ def migrate_existing_users(db):
 
 
 # ---------------------------------------------------------------------------
+# Students and parent accounts (shared by school staff and the parent /join page)
+# ---------------------------------------------------------------------------
+
+def kid_username(db, first):
+    base = re.sub(r"[^a-z]", "", (first or "").lower())[:12] or "kid"
+    for _ in range(50):
+        username = f"{base}{secrets.randbelow(9000) + 1000}@kids.aitutor"
+        if not db.users.find_one({"username": username}):
+            return username
+    raise RuntimeError("Could not create a unique login")
+
+
+def kid_password():
+    return f"{secrets.choice(KID_WORDS)}-{secrets.randbelow(9000) + 1000}"
+
+
+def create_student(db, bcrypt, cls, first, last, parent, created_by, password=None, extra=None):
+    """Create a child account in `cls` with an empty progress record. Returns (id, login)."""
+    password = password or kid_password()
+    username = kid_username(db, first)
+    student = {
+        "first_name": first, "last_name": last, "username": username,
+        "password": bcrypt.generate_password_hash(password).decode("utf-8"),
+        "user_type": "child", "school_id": cls["school_id"], "class_ids": [str(cls["_id"])],
+        "level": cls.get("level"), "parent": parent or {},
+        "created_by": created_by, "created_at": datetime.utcnow(),
+    }
+    student.update(extra or {})
+    student_id = db.users.insert_one(student).inserted_id
+    db.progress.insert_one({
+        "_id": student_id, "child_name": f"{first} {last}".strip(),
+        "completed_items": {k: [] for k in ("abc", "numbers", "shapes", "colors", "poems", "fruits", "flags")},
+        "total_score": 0, "last_activity": None,
+    })
+    return str(student_id), {"username": username, "password": password}
+
+
+def link_parent(db, bcrypt, student_id, parent, previous_email=""):
+    """Connect a child to the parent account for parent["email"], creating it when needed.
+
+    Returns (login, note): `login` is a one-time {username, password} when a new parent
+    account was made; `note` explains when the email could not be linked.
+    """
+    student_id = str(student_id)
+    email = ((parent or {}).get("email") or "").lower()
+    if previous_email and previous_email.lower() != email:
+        db.users.update_one({"user_type": "parent", "username": previous_email.lower()},
+                            {"$pull": {"child_ids": student_id}})
+    if not email:
+        return None, None
+    existing = db.users.find_one({"username": email})
+    if existing:
+        if existing.get("user_type") != "parent":
+            return None, "That email belongs to a staff or student account, so no parent login was made."
+        db.users.update_one({"_id": existing["_id"]}, {"$addToSet": {"child_ids": student_id}})
+        return None, "Linked to the parent's existing account."
+    name = ((parent or {}).get("name") or "").split()
+    password = secrets.token_urlsafe(9)
+    db.users.insert_one({
+        "first_name": name[0] if name else "Parent", "last_name": " ".join(name[1:]),
+        "username": email, "password": bcrypt.generate_password_hash(password).decode("utf-8"),
+        "user_type": "parent", "child_ids": [student_id], "phone": (parent or {}).get("phone", ""),
+        "weekly_email": True, "created_at": datetime.utcnow(),
+    })
+    return {"username": email, "password": password}, None
+
+
+# ---------------------------------------------------------------------------
 # Visibility
 # ---------------------------------------------------------------------------
 
@@ -94,6 +162,9 @@ def visible_student_filter(db, session):
     if role == "teacher":
         me = staff_record(db, session)
         return {"user_type": "child", "class_ids": {"$in": me.get("class_ids") or []}}
+    if role == "parent":
+        me = db.users.find_one({"_id": oid(session.get("user_id"))}) or {}
+        return {"user_type": "child", "_id": {"$in": [o for o in map(oid, me.get("child_ids") or []) if o]}}
     return {"_id": {"$in": []}}
 
 
@@ -108,10 +179,10 @@ def can_view_student(db, session, student_id):
     if role == "child":
         return session.get("user_id") == str(student_id)
     student_oid = oid(str(student_id))
-    if not student_oid or role not in ("admin", "principal", "teacher"):
+    if not student_oid or role not in ("admin", "principal", "teacher", "parent"):
         return False
-    query = dict(visible_student_filter(db, session))
-    query["_id"] = student_oid
+    # $and keeps the filter's own _id rule (parents) instead of overwriting it.
+    query = {"$and": [visible_student_filter(db, session), {"_id": student_oid}]}
     return db.users.count_documents(query, limit=1) > 0
 
 
@@ -298,6 +369,9 @@ def register_school_routes(app, core):
             return sum(len(v) for v in items.values() if isinstance(v, list))
 
         class_names = {str(c["_id"]): c.get("name") for c in classes}
+        student_ids = [str(s["_id"]) for s in students]
+        linked_children = {cid for p in db().users.find({"user_type": "parent", "child_ids": {"$in": student_ids}}, {"child_ids": 1})
+                           for cid in p.get("child_ids") or []}
         payload = {
             "school": school_payload(school),
             "role": role,
@@ -313,6 +387,8 @@ def register_school_routes(app, core):
                 "class_id": (s.get("class_ids") or [None])[0],
                 "class_name": class_names.get((s.get("class_ids") or [None])[0], ""),
                 "parent": s.get("parent") or {},
+                "has_parent_login": str(s["_id"]) in linked_children,
+                "joined_with_code": bool(s.get("joined_with_code")),
                 "items_learned": learned(str(s["_id"])),
             }) for s in students],
         }
@@ -517,14 +593,6 @@ def register_school_routes(app, core):
             "phone": re.sub(r"[^0-9+\-() ]", "", core.clean_str(parent.get("phone"), 30) or ""),
         }, None
 
-    def kid_username(first):
-        base = re.sub(r"[^a-z]", "", first.lower())[:12] or "kid"
-        for _ in range(50):
-            username = f"{base}{secrets.randbelow(9000) + 1000}@kids.aitutor"
-            if not db().users.find_one({"username": username}):
-                return username
-        raise RuntimeError("Could not create a unique login")
-
     @app.route("/api/school/students", methods=["POST"])
     def add_student():
         session = session_for("admin", "principal", "teacher")
@@ -542,28 +610,14 @@ def register_school_routes(app, core):
         if problem:
             return err(problem)
         password = data.get("password")
-        if password in (None, ""):
-            password = f"{secrets.choice(KID_WORDS)}-{secrets.randbelow(9000) + 1000}"
-        elif not check_password(password, 6):
+        if password not in (None, "") and not check_password(password, 6):
             return err("Password must be 6 to 128 characters.")
-        username = kid_username(first)
-        student = {
-            "first_name": first, "last_name": last, "username": username,
-            "password": core.bcrypt.generate_password_hash(password).decode("utf-8"),
-            "user_type": "child", "school_id": cls["school_id"], "class_ids": [str(cls["_id"])],
-            "level": cls.get("level"), "parent": parent,
-            "created_by": session.get("user_id"), "created_at": datetime.utcnow(),
-        }
-        student_id = db().users.insert_one(student).inserted_id
-        db().progress.insert_one({
-            "_id": student_id, "child_name": f"{first} {last}".strip(),
-            "completed_items": {k: [] for k in ("abc", "numbers", "shapes", "colors", "poems", "fruits", "flags")},
-            "total_score": 0, "last_activity": None,
-        })
+        student_id, login = create_student(db(), core.bcrypt, cls, first, last, parent,
+                                           session.get("user_id"), password or None)
+        parent_login, parent_note = link_parent(db(), core.bcrypt, student_id, parent)
         return jsonify({
             "message": "Student added. Share this login with the parent; the password is shown only once.",
-            "_id": str(student_id),
-            "login": {"username": username, "password": password},
+            "_id": student_id, "login": login, "parent_login": parent_login, "parent_note": parent_note,
         }), 201
 
     @app.route("/api/school/students/<student_id>", methods=["PUT"])
@@ -576,6 +630,7 @@ def register_school_routes(app, core):
         student = db().users.find_one({"_id": oid(student_id)})
         data = core.json_body()
         update = {}
+        parent_login = parent_note = None
         for field in ("first_name", "last_name"):
             value = core.clean_str(data.get(field), 60)
             if value:
@@ -585,6 +640,8 @@ def register_school_routes(app, core):
             if problem:
                 return err(problem)
             update["parent"] = parent
+            parent_login, parent_note = link_parent(db(), core.bcrypt, student_id, parent,
+                                                    (student.get("parent") or {}).get("email", ""))
         if data.get("class_id"):
             cls = load_class_for(session, data.get("class_id"), allow_teacher=True)
             if not cls:
@@ -594,7 +651,7 @@ def register_school_routes(app, core):
             update.update({"class_ids": [str(cls["_id"])], "school_id": cls["school_id"], "level": cls.get("level")})
         if update:
             db().users.update_one({"_id": student["_id"]}, {"$set": update})
-        return jsonify({"message": "Student updated."})
+        return jsonify({"message": "Student updated.", "parent_login": parent_login, "parent_note": parent_note})
 
     @app.route("/api/school/students/<student_id>/reset-password", methods=["POST"])
     def reset_student_password(student_id):
@@ -603,7 +660,7 @@ def register_school_routes(app, core):
             return err("Unauthorized", 401)
         if not can_view_student(db(), session, student_id):
             return err("Student not found.", 404)
-        password = f"{secrets.choice(KID_WORDS)}-{secrets.randbelow(9000) + 1000}"
+        password = kid_password()
         student = db().users.find_one({"_id": oid(student_id)})
         db().users.update_one({"_id": student["_id"]}, {"$set": {
             "password": core.bcrypt.generate_password_hash(password).decode("utf-8")}})

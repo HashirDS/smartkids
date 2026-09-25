@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const KEY = 'ai_tutor_cookie_consent';
-const PUBLIC_PATHS = ['/', '/login', '/try-classroom', '/privacy', '/terms', '/cookies'];
+const PUBLIC_PATHS = ['/', '/login', '/try-classroom', '/privacy', '/terms', '/cookies', '/join'];
 
 const readChoice = () => {
   try {

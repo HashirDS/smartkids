@@ -169,7 +169,12 @@ const SchoolWorkspace = ({ schoolId, embedded = false }) => {
           onClose={() => setModal(null)}
           onSave={async (values) => {
             const out = await run(() => call('/api/school/students', 'POST', values));
-            if (out?.login) setLogin({ title: 'Student login', name: `${values.first_name} ${values.last_name}`.trim(), login: out.login });
+            if (out?.login) {
+              setLogin({
+                title: 'Student login', name: `${values.first_name} ${values.last_name}`.trim(), login: out.login,
+                parent: out.parent_login, parentName: values.parent?.name, parentNote: out.parent_note,
+              });
+            }
           }}
         />
       )}
@@ -185,12 +190,28 @@ const SchoolWorkspace = ({ schoolId, embedded = false }) => {
         <ParentModal
           student={modal.item}
           onClose={() => setModal(null)}
-          onSave={(parent) => run(() => call(`/api/school/students/${modal.item._id}`, 'PUT', { parent }), 'Parent details saved.')}
+          onSave={async (parent) => {
+            const out = await run(() => call(`/api/school/students/${modal.item._id}`, 'PUT', { parent }),
+              'Parent details saved.');
+            if (out?.parent_login) setLogin({ parentOnly: true, parent: out.parent_login, parentName: parent.name });
+            else if (out?.parent_note) setNotice({ tone: 'info', text: `Parent details saved. ${out.parent_note}` });
+          }}
         />
       )}
       {login && (
         <Modal title="Account created" onClose={() => setLogin(null)} footer={<Button onClick={() => setLogin(null)}>Done</Button>}>
-          <LoginCard title={login.title} name={login.name} login={login.login} />
+          <div className="space-y-4">
+            {!login.parentOnly && <LoginCard title={login.title} name={login.name} login={login.login} />}
+            {login.parent && (
+              <LoginCard
+                title="Parent login"
+                name={login.parentName}
+                login={login.parent}
+                note="The parent logs in with this to see their child's progress and get the weekly email. Shown only once."
+              />
+            )}
+            {login.parentNote && <p className="text-sm font-bold text-[#4A5578]">{login.parentNote}</p>}
+          </div>
         </Modal>
       )}
     </>
@@ -200,6 +221,25 @@ const SchoolWorkspace = ({ schoolId, embedded = false }) => {
 };
 
 /* ---------------- Tabs ---------------- */
+
+// Parents open this link to sign up straight into the class.
+const CopyJoinLink = ({ code }) => {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/join?code=${code}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt('Copy this link for parents:', `${window.location.origin}/join?code=${code}`);
+    }
+  };
+  return (
+    <button type="button" onClick={copy} className="mt-1 text-xs font-bold text-[#1E88FF] hover:underline">
+      {copied ? 'Link copied' : 'Copy parent sign-up link'}
+    </button>
+  );
+};
 
 const ClassesTab = ({ classes, canManage, onAdd, onEdit, onDelete, onNewCode, onAddStudent }) => (
   <>
@@ -227,6 +267,7 @@ const ClassesTab = ({ classes, canManage, onAdd, onEdit, onDelete, onNewCode, on
             <div className="mt-4 rounded-2xl bg-white/80 px-4 py-3">
               <p className="text-xs font-bold uppercase text-[#8A91AD]">Class code</p>
               <p className="landing-display select-all text-2xl font-bold tracking-wider text-[#1E2A55]">{cls.code}</p>
+              <CopyJoinLink code={cls.code} />
             </div>
             <p className="mt-3 text-sm font-semibold text-[#4A5578]">
               Teachers: {cls.teachers.length ? cls.teachers.join(', ') : 'none yet'}
@@ -303,6 +344,7 @@ const StudentsTab = ({ students, classes, classFilter, setClassFilter, onAdd, on
                 <td className="px-4 py-3">
                   <p className="font-bold text-[#1E2A55]">{`${s.first_name} ${s.last_name}`.trim()}</p>
                   <p className="break-all text-xs font-semibold text-[#8A91AD]">{s.email}</p>
+                  {s.joined_with_code && <Badge color="#E0F1FF">Joined with code</Badge>}
                 </td>
                 <td className="px-4 py-3 font-semibold text-[#4A5578]">{s.class_name || '—'}</td>
                 <td className="px-4 py-3 font-semibold text-[#4A5578]">
@@ -311,6 +353,7 @@ const StudentsTab = ({ students, classes, classFilter, setClassFilter, onAdd, on
                       <p className="font-bold text-[#1E2A55]">{s.parent.name}</p>
                       <p className="break-all">{s.parent.email}</p>
                       <p>{s.parent.phone}</p>
+                      {s.has_parent_login && <Badge color="#DDF7E6" text="#14683A">Parent login</Badge>}
                     </>
                   ) : '—'}
                 </td>
@@ -466,7 +509,7 @@ const StudentModal = ({ classes, defaultClass, onClose, onSave }) => {
           </Select>
         </Field>
         <ParentFields values={parent} set={setP} />
-        <p className="text-xs font-semibold text-[#8A91AD]">A child login and a simple password are created and shown once for you to give to the parent.</p>
+        <p className="text-xs font-semibold text-[#8A91AD]">A child login and a simple password are created and shown once. With a parent email, the parent also gets their own login to follow progress.</p>
       </div>
     </Modal>
   );

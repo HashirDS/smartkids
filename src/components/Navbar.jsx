@@ -2,9 +2,9 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import AppNavbar from './AppNavbar';
 
-const HOME = { admin: '/admin-dashboard', principal: '/school', teacher: '/teacher-dashboard' };
+const HOME = { admin: '/admin-dashboard', principal: '/school', teacher: '/teacher-dashboard', parent: '/parent' };
 
-// Navbar for the admin, principal and teacher areas: text tabs only; Log out is inside the ☰ menu.
+// Navbar for the admin, principal, teacher and parent areas: text tabs only; Log out is inside the ☰ menu.
 const Navbar = () => {
   const { pathname } = useLocation();
   const stored = localStorage.getItem('user_type');
@@ -28,9 +28,10 @@ const Navbar = () => {
       tab('student', 'Student view', '/child-dashboard'),
       { key: 'ai-teacher', label: '3D Teacher', href: '/ai-teacher' },
     ],
+    parent: [tab('parent', 'My children', '/parent')],
   }[role];
 
-  return <AppNavbar role={role} tabs={tabs} homeTo={HOME[role]} logoutTo="/login" />;
+  return <AppNavbar role={role} tabs={tabs} homeTo={HOME[role]} logoutTo={role === 'parent' ? '/' : '/login'} />;
 };
 
 export default Navbar;
