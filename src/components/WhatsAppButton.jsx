@@ -1,4 +1,6 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
+import { isLoggedIn } from '../auth';
 
 const WHATSAPP_URL = 'https://wa.me/923049111104';
 
@@ -10,8 +12,10 @@ export function WhatsAppIcon({ className = 'h-6 w-6' }) {
   );
 }
 
-// Floating WhatsApp contact button shown on every page.
+// Floating WhatsApp contact button: landing page only, and only for visitors who are not logged in.
 export default function WhatsAppButton() {
+  const { pathname } = useLocation();
+  if (pathname !== '/' || isLoggedIn()) return null;
   return (
     <a
       href={WHATSAPP_URL}

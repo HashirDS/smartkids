@@ -8,6 +8,7 @@ import ShapesLesson from './ShapesLesson';
 import ColorsLesson from './ColorsLesson';
 import PoemsLesson from './PoemsLesson';
 import FruitLesson from './FruitLesson';
+import FlagsLesson from './FlagsLesson';
 import ChildQuiz from './ChildQuiz';
 import { API_URL, apiFetch } from '../api';
 
@@ -85,6 +86,8 @@ const ChildDashboard = () => {
         );
       case 'fruits':
         return <FruitLesson />;
+      case 'flags':
+        return <FlagsLesson />;
       case 'quiz':
         return <ChildQuiz kind="recommendation" />;
       case 'quiz-teacher':

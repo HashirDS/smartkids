@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><title>Flags</title>
+<rect x="18" y="14" width="7" height="96" rx="3.5" fill="#8a5a34"/><circle cx="21.5" cy="12" r="6" fill="#ffd23f"/>
+<path d="M25 20h62c-6 8-6 16 0 24H25z" fill="#01411C"/><path d="M25 20h14v24H25z" fill="#fff"/>
+<circle cx="61" cy="32" r="8" fill="#fff"/><circle cx="64" cy="30" r="7" fill="#01411C"/><circle cx="70" cy="27" r="2.2" fill="#fff"/>
+<rect x="25" y="52" width="4" height="0" fill="none"/>
+<path d="M25 52h50c-5 7-5 14 0 21H25z" fill="#FF9900"/><path d="M25 62h50" stroke="#fff" stroke-width="3"/>
+<path d="M25 80h40c-4 6-4 12 0 18H25z" fill="#1E88FF"/><circle cx="41" cy="89" r="4" fill="#fff"/>
+</svg>

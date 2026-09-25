@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import {
   PieChart,
@@ -12,7 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { LogOut, ShieldCheck, Save } from "lucide-react";
+import { ShieldCheck, Save } from "lucide-react";
 import { API_URL, apiFetch } from "../api";
 
 const LESSONS = [
@@ -23,12 +22,11 @@ const LESSONS = [
   { key: "colors", label: "Colors" },
   { key: "drawing", label: "Drawing Board" },
   { key: "poems", label: "Poems" },
+  { key: "flags", label: "Flags" },
   { key: "quiz", label: "Quiz" },
 ];
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
-
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [students, setStudents] = useState([]);
@@ -95,15 +93,6 @@ const AdminDashboard = () => {
       })
       .catch(() => setRestrictedLessons([]));
   }, [selectedUser, isGlobal]);
-
-  // ===============================
-  // LOGOUT
-  // ===============================
-  const handleLogout = () => {
-    if (!window.confirm("Are you sure you want to logout?")) return;
-    localStorage.clear();
-    navigate("/login");
-  };
 
   // ===============================
   // USER MANAGEMENT
@@ -185,13 +174,6 @@ const AdminDashboard = () => {
               </p>
             </div>
           </div>
-
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-xl"
-          >
-            <LogOut className="w-4 h-4" /> Logout
-          </button>
         </div>
 
         {/* OVERVIEW CARDS */}

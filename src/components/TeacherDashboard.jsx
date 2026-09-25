@@ -23,8 +23,9 @@ const CATEGORY_COLORS = {
   colors: '#ff8042',
   poems: '#8dd1e1',
   fruits: '#d0ed57',
+  flags: '#14b8a6',
 };
-const ALL_CATEGORIES = ['abc', 'numbers', 'shapes', 'colors', 'poems', 'fruits'];
+const ALL_CATEGORIES = ['abc', 'numbers', 'shapes', 'colors', 'poems', 'fruits', 'flags'];
 const PIE_COLORS = ALL_CATEGORIES.map(cat => CATEGORY_COLORS[cat] || '#888888');
 // ---
 

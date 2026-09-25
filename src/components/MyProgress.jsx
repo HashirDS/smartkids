@@ -34,6 +34,7 @@ const CATEGORIES = [
   { key: 'colors', label: 'Colors', color: '#ff8042' },
   { key: 'poems', label: 'Poems', color: '#8dd1e1' },
   { key: 'fruits', label: 'Fruits', color: '#d0ed57' },
+  { key: 'flags', label: 'Flags', color: '#14b8a6' },
 ];
 
 const MyProgress = () => {
