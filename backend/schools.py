@@ -18,7 +18,7 @@ LEVELS = {"preschool": "PRE", "nursery": "NUR", "prep": "PREP", "kg1": "KG1"}
 LEVEL_LABELS = {"preschool": "Preschool", "nursery": "Nursery", "prep": "Prep", "kg1": "KG1"}
 CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # no 0/O or 1/I/L confusion
 KID_WORDS = ["lion", "tiger", "panda", "koala", "zebra", "parrot", "mango", "apple", "star", "moon", "rocket", "kite"]
-LESSON_KEYS = {"abc", "numbers", "shapes", "colors", "fruits", "drawing", "poems", "flags", "quiz"}
+LESSON_KEYS = {"abc", "numbers", "shapes", "colors", "fruits", "drawing", "poems", "flags", "urdu", "arabic", "quiz"}
 
 
 def oid(value):
@@ -105,7 +105,7 @@ def create_student(db, bcrypt, cls, first, last, parent, created_by, password=No
     student_id = db.users.insert_one(student).inserted_id
     db.progress.insert_one({
         "_id": student_id, "child_name": f"{first} {last}".strip(),
-        "completed_items": {k: [] for k in ("abc", "numbers", "shapes", "colors", "poems", "fruits", "flags")},
+        "completed_items": {k: [] for k in ("abc", "numbers", "shapes", "colors", "poems", "fruits", "flags", "urdu", "arabic")},
         "total_score": 0, "last_activity": None,
     })
     return str(student_id), {"username": username, "password": password}

@@ -87,12 +87,20 @@ Each module is built, tested (automated + clicked through), then pushed to the
 - Admin: Parents count, and the user list shows "Parent of …" / "Parent: …" links.
   Principal/teacher see "Parent login" and "Joined with code" badges on each student.
 
-### M3 – Languages: Urdu and Arabic ⬜
-- Language switch (English / اردو / العربية) for child, teacher, parent; right-to-left layout for Urdu and Arabic.
-- All app text translated; lessons have English + Urdu + Arabic names/audio where it makes sense.
-- Tutor voice speaks the chosen language (Azure voices ur-PK and ar-SA; browser voice as fallback).
-- New lessons: **Urdu alphabet (حروفِ تہجی)** and **Arabic Qaida alphabet**.
-- Translations reviewed by a native speaker before going live.
+### M3 – Languages: Urdu and Arabic ✅
+- Language switch (English / اردو / العربية) inside the ☰ menu for students and parents, and on /join;
+  Urdu and Arabic pages read right to left. Staff pages (principal, teacher, admin) stay English for now.
+- Translated: student navbar, home tiles and messages, parent page, /join, the two new lessons.
+  English learning lessons (ABC, Numbers…) and the public landing page stay English.
+- Tutor voice speaks the chosen language (Azure `ur-PK-UzmaNeural` / `ar-SA-ZariyahNeural`, male voices too;
+  the browser's own voice is the fallback).
+- New lessons: **Urdu alphabet (حروفِ تہجی)**, 37 letters with picture words ("بے سے بلی"), and
+  **Arabic Qaida**, 29 letters with names plus zabar / zer / pesh on every letter.
+  Both plug into tiles, the Lessons menu, voice commands ("Urdu", "Arabic"/"Qaida"), progress, quizzes,
+  teacher charts, lesson restrictions, the parent page and the weekly email.
+- Fonts: Noto Nastaliq Urdu and Noto Naskh Arabic (loaded only when that text is on screen).
+- **To do before going live:** a native Urdu speaker and an Arabic/Qaida teacher review the text and letter names.
+- Speaking practice (microphone) for Urdu/Arabic letters is not in this version.
 
 ### M4 – New content ⬜
 - **Islamic studies** (first version, needs a scholar's review): Five Pillars, Wudu steps, names of the
@@ -149,3 +157,4 @@ Features that need a key stay switched off until the key is added; nothing break
 | 2026-09-25 | M0 | Backend test suite (pytest + mongomock), GitHub Actions CI (lint, build, tests), MONGO_DB_NAME for a separate staging database, /api/health, fixed conditional React hooks in the teacher dashboard |
 | 2026-09-25 | M1 | Schools, classes (Preschool/Nursery/Prep/KG1) with class codes, principal role and dashboard, admin Schools page, teacher My Classes tab, staff add students with parent details (login shown once), move students, reset passwords, school-level lesson access, all teacher/principal APIs scoped to their own classes/school, existing users moved into a Default school |
 | 2026-09-25 | M2 | Parent role and dashboard, /join with class code and consent, sibling add, automatic parent logins from staff, weekly email via Resend + Vercel Cron with unsubscribe, admin parent links; fixed a visibility rule so a parent can only ever see their own children; role label moved from navbar into the ☰ menu |
+| 2026-09-25 | M3 | English/Urdu/Arabic switch with right-to-left layout for students and parents, Urdu alphabet and Arabic Qaida lessons with Azure Urdu/Arabic voices, Urdu and Arabic quizzes, new lessons linked to menus, voice, progress, charts, restrictions and parent reports |

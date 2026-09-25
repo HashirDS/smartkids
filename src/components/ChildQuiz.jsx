@@ -58,7 +58,31 @@ const QUIZZES = {
       { question: 'Which country has this flag?', flag: 'jp', options: ['Japan', 'China', 'Canada', 'Spain'], answer: 'Japan' },
     ],
   },
+  // `script` shows the letter and options in the Urdu / Arabic font; answers are tapped, not spoken.
+  urdu: {
+    title: 'Urdu Alphabet Quiz',
+    script: 'urdu',
+    questions: [
+      { question: 'Which letter is this? · یہ کون سا حرف ہے؟', glyph: 'ب', options: ['بے', 'پے', 'تے', 'ثے'], answer: 'بے' },
+      { question: 'Which letter is this? · یہ کون سا حرف ہے؟', glyph: 'ش', options: ['سین', 'شین', 'صاد', 'ضاد'], answer: 'شین' },
+      { question: 'Which word starts with ب? · ب سے کیا؟', options: ['🐱 بلی', '🦁 شیر', '🐟 مچھلی', '🥕 گاجر'], answer: '🐱 بلی' },
+      { question: 'Which letter is this? · یہ کون سا حرف ہے؟', glyph: 'ک', options: ['گاف', 'کاف', 'قاف', 'لام'], answer: 'کاف' },
+      { question: '🍎 سیب starts with which letter? · سیب کس حرف سے؟', options: ['س', 'ش', 'ص', 'ث'], answer: 'س' },
+    ],
+  },
+  arabic: {
+    title: 'Arabic Qaida Quiz',
+    script: 'arabic',
+    questions: [
+      { question: 'Which letter is this?', glyph: 'ب', options: ['بَاء', 'تَاء', 'ثَاء', 'نُون'], answer: 'بَاء' },
+      { question: 'Which letter is this?', glyph: 'ج', options: ['حَاء', 'جِيم', 'خَاء', 'عَين'], answer: 'جِيم' },
+      { question: 'Which letter is this?', glyph: 'ق', options: ['فَاء', 'كَاف', 'قَاف', 'وَاو'], answer: 'قَاف' },
+      { question: 'Which one is Meem?', options: ['م', 'ن', 'ل', 'ه'], answer: 'م' },
+      { question: 'Which sound is this?', glyph: 'بَ', options: ['ba (zabar)', 'bi (zer)', 'bu (pesh)'], answer: 'ba (zabar)' },
+    ],
+  },
 };
+const SCRIPT_FONT = { urdu: 'font-urdu', arabic: 'font-arabic' };
 
 const formatWhen = (value) => {
   if (!value) return '';
@@ -211,6 +235,9 @@ const ChildQuiz = ({ kind = 'recommendation' }) => {
           {question.flag && /^[a-z]{2,3}$/.test(question.flag) && (
             <img src={`/flags/${question.flag}.svg`} alt="Flag" className="mx-auto -mt-2 mb-6 aspect-[4/3] w-48 rounded-lg border border-gray-200 object-cover shadow-md" />
           )}
+          {question.glyph && (
+            <p dir="rtl" className={`-mt-2 mb-6 text-center text-8xl leading-[1.6] text-purple-800 ${SCRIPT_FONT[quiz.script] || ''}`}>{question.glyph}</p>
+          )}
           <div className="space-y-3">
             {(question.options || []).map((option) => {
               const showResult = Boolean(picked);
@@ -220,7 +247,7 @@ const ChildQuiz = ({ kind = 'recommendation' }) => {
               if (showResult && isAnswer) style = 'bg-green-100 text-green-800';
               else if (showResult && isPicked) style = 'bg-red-100 text-red-800';
               return (
-                <button key={option} type="button" disabled={showResult} onClick={() => chooseAnswer(option)} className={`w-full text-left font-bold px-4 py-3 rounded-2xl flex items-center justify-between ${style}`}>
+                <button key={option} type="button" disabled={showResult} onClick={() => chooseAnswer(option)} className={`w-full text-left font-bold px-4 py-3 rounded-2xl flex items-center justify-between ${quiz.script ? `${SCRIPT_FONT[quiz.script]} text-2xl` : ''} ${style}`}>
                   {option}
                   {showResult && isAnswer && <CheckCircle2 className="w-5 h-5" />}
                   {showResult && isPicked && !isAnswer && <XCircle className="w-5 h-5" />}
@@ -228,7 +255,7 @@ const ChildQuiz = ({ kind = 'recommendation' }) => {
               );
             })}
           </div>
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {!quiz.script && <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               disabled={Boolean(picked) || listening}
@@ -270,7 +297,7 @@ const ChildQuiz = ({ kind = 'recommendation' }) => {
                 <PencilLine className="w-5 h-5" />
               </button>
             </form>
-          </div>
+          </div>}
         </div>
       </div>
     );

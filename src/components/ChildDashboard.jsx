@@ -9,12 +9,16 @@ import ColorsLesson from './ColorsLesson';
 import PoemsLesson from './PoemsLesson';
 import FruitLesson from './FruitLesson';
 import FlagsLesson from './FlagsLesson';
+import UrduLesson from './lessons/UrduLesson';
+import ArabicLesson from './lessons/ArabicLesson';
+import { useT } from '../i18n';
 import ChildQuiz from './ChildQuiz';
 import { API_URL, apiFetch } from '../api';
 
 const ChildDashboard = () => {
   const [activeContent, setActiveContent] = useState('home');
   const [restrictedLessons, setRestrictedLessons] = useState([]);
+  const { t } = useT();
 
   // ===============================
   // FETCH RESTRICTED LESSONS
@@ -45,9 +49,7 @@ const ChildDashboard = () => {
   // ===============================
   const handleContentSelect = (contentKey) => {
     if (isRestricted(contentKey)) {
-      alert(
-        "🔒 This lesson is temporarily unavailable.\n\nPlease contact your teacher or parent."
-      );
+      alert(t('home.locked'));
       setActiveContent("home");
       return;
     }
@@ -88,6 +90,10 @@ const ChildDashboard = () => {
         return <FruitLesson />;
       case 'flags':
         return <FlagsLesson />;
+      case 'urdu':
+        return <UrduLesson />;
+      case 'arabic':
+        return <ArabicLesson />;
       case 'quiz':
         return <ChildQuiz kind="recommendation" />;
       case 'quiz-teacher':
