@@ -6,6 +6,7 @@ import Navbar from './Navbar';
 import AssignQuiz from './AssignQuiz';
 import { API_URL, apiFetch } from '../api';
 import PaperGenerator from './PaperGenerator'; // <--- NEW IMPORT ADDED
+import SchoolWorkspace from './school/SchoolWorkspace';
 //import { Users, AlertCircle, Loader, BarChart3, PieChart, Activity, XCircle, UserCheck, Star, Trophy, Target, Mic, Volume2, TrendingUp, NotebookPen } from 'lucide-react'; // <--- NotebookPen ADDED
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -647,6 +648,8 @@ const TeacherDashboard = () => {
           <InteractiveProgressDashboard />
         </>
       );
+    } else if (activeView === 'classes') {
+      return <SchoolWorkspace embedded />;
     } else if (activeView === 'generator') {
       // ⭐ RENDER THE NEW COMPONENT ⭐
       return (
@@ -682,6 +685,18 @@ const TeacherDashboard = () => {
             <NotebookPen className="w-5 h-5 mr-2" />
             Worksheet Generator
           </button>
+          {localStorage.getItem('user_type') === 'teacher' && (
+            <button
+              onClick={() => setActiveView('classes')}
+              className={`py-3 px-6 text-lg font-semibold transition-colors duration-200 ${activeView === 'classes'
+                  ? 'text-purple-600 border-b-4 border-purple-600'
+                  : 'text-gray-500 hover:text-purple-400'
+                } flex items-center`}
+            >
+              <Users className="w-5 h-5 mr-2" />
+              My Classes
+            </button>
+          )}
         </div>
 
         {/* --- Dynamic Content Rendering --- */}

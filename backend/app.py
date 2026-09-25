@@ -23,6 +23,8 @@ from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 from pymongo import ReturnDocument
 from xml.sax.saxutils import escape as xml_escape
+from schools import (register_school_routes, can_view_student, visible_student_filter,
+                     visible_student_ids, assign_to_default, migrate_existing_users)
 import hmac
 from werkzeug.security import check_password_hash
 # --- NEW IMPORTS FOR AI & TTS ---
@@ -103,8 +105,12 @@ if db is not None:
         db.sessions.create_index("created_at", expireAfterSeconds=SESSION_DAYS * 24 * 3600)
         db.sessions.create_index("token")
         db.rate_limits.create_index("expires_at", expireAfterSeconds=0)
+        db.classes.create_index("code")
+        moved = migrate_existing_users(db)
+        if moved:
+            print(f"Moved {moved} existing users into the default school.")
     except Exception as e:
-        print(f"Could not create indexes: {e}")
+        print(f"Could not create indexes / migrate: {e}")
 
 def issue_token(user_id, user_type):
     token = secrets.token_urlsafe(32)
@@ -376,6 +382,7 @@ def register_user():
     except Exception as e:
         print(f"MongoDB insert error: {e}")
         return jsonify({"message": "Database write error during registration"}), 500
+    assign_to_default(db, user_id, user_type)
 
     if user_type == "child":
         initial_progress = {
@@ -506,7 +513,7 @@ def _load_progress(user_id):
 @app.route("/api/progress/me", methods=["GET"])
 def get_my_progress():
     session = current_session()
-    if not session or session.get("user_type") not in ("child", "teacher", "admin"):
+    if not session or session.get("user_type") not in ("child", "teacher", "principal", "admin"):
         return jsonify({"message": "Unauthorized"}), 401
     if db is None:
         return jsonify({"message": "Database connection failed"}), 500
@@ -522,10 +529,10 @@ def get_my_progress():
 @app.route("/api/progress/summary/<user_id>", methods=["GET"])
 def get_child_progress(user_id):
     session = current_session()
-    if not session or session.get("user_type") not in ("child", "teacher", "admin"):
+    if not session or session.get("user_type") not in ("child", "teacher", "principal", "admin"):
         return jsonify({"message": "Unauthorized"}), 401
-    if session.get("user_type") == "child" and session.get("user_id") != str(user_id):
-        return jsonify({"message": "You can only view your own progress"}), 403
+    if not can_view_student(db, session, user_id):
+        return jsonify({"message": "You can only view your own students' progress"}), 403
     if db is None: return jsonify({"message": "Database connection failed"}), 500
     try:
         progress_data = _load_progress(user_id)
@@ -537,12 +544,16 @@ def get_child_progress(user_id):
 
 @app.route("/api/progress/all_children", methods=["GET"])
 def get_all_child_progress():
-    denied = reject_unless("teacher", "admin")
+    denied = reject_unless("teacher", "principal", "admin")
     if denied:
         return denied
     if db is None: return jsonify({"message": "Database connection failed"}), 500
     try:
-        all_progress = list(db.progress.find({}))
+        session = current_session()
+        query = {}
+        if session.get("user_type") != "admin":
+            query = {"_id": {"$in": [ObjectId(i) for i in visible_student_ids(db, session)]}}
+        all_progress = list(db.progress.find(query))
         for progress in all_progress:
             progress["_id"] = str(progress["_id"])
             if "completed_items" not in progress:
@@ -556,11 +567,11 @@ def get_all_child_progress():
 def mark_item_complete():
     if db is None: return jsonify({"message": "Database connection failed"}), 500
     session = current_session()
-    if not session or session.get("user_type") not in ("child", "teacher", "admin"):
+    if not session or session.get("user_type") not in ("child", "teacher", "principal", "admin"):
         return jsonify({"message": "Unauthorized"}), 401
     data = json_body()
     user_id = clean_str(data.get("user_id"), 24)
-    if session.get("user_type") == "child" and session.get("user_id") != str(user_id):
+    if not can_view_student(db, session, user_id):
         return jsonify({"message": "You can only update your own progress"}), 403
     category = clean_str(data.get("category"), 20)
     item = clean_str(data.get("item"), 120)
@@ -895,7 +906,7 @@ def analyze_speech():
     temp_path = None
 
     session = current_session()
-    if not session or session.get("user_type") not in ("child", "teacher", "admin"):
+    if not session or session.get("user_type") not in ("child", "teacher", "principal", "admin"):
         return jsonify({"success": False, "error": "Unauthorized", "reward": "Please log in again.", "points_added": 0}), 401
     if rate_limited(f"speech:{session.get('user_id')}", 60, 600):
         return too_many_requests()
@@ -1120,7 +1131,7 @@ def analyze_speech():
 # ✅ NEW: Free & Stable Audio Generator using gTTS
 @app.route('/generate-audio', methods=['POST'])
 def generate_audio():
-    denied = reject_unless("child", "teacher", "admin")
+    denied = reject_unless("child", "teacher", "principal", "admin")
     if denied:
         return denied
     try:
@@ -1162,7 +1173,7 @@ if GROQ_API_KEY and groq_client is None:
 
 @app.route('/generate-poem', methods=['POST'])
 def generate_poem():
-    denied = reject_unless("child", "teacher", "admin")
+    denied = reject_unless("child", "teacher", "principal", "admin")
     if denied:
         return denied
     try:
@@ -1251,9 +1262,11 @@ def model_status():
 
 @app.route("/api/speech-analytics/<user_id>", methods=["GET"])
 def get_speech_analytics(user_id):
-    denied = reject_unless("teacher", "admin")
+    denied = reject_unless("teacher", "principal", "admin")
     if denied:
         return denied
+    if not can_view_student(db, current_session(), user_id):
+        return jsonify({"message": "Student not found"}), 404
     try:
         progress = db.progress.find_one({"_id": ObjectId(user_id)})
         if not progress or "speech_history" not in progress or not progress["speech_history"]:
@@ -1318,7 +1331,7 @@ def chat_assistant():
     Smart Learning System Chatbot - Powered by Llama 3 (via Groq)
     Fallback: Gemini Flash -> Rule Based
     """
-    denied = reject_unless("child", "teacher", "admin")
+    denied = reject_unless("child", "teacher", "principal", "admin")
     if denied:
         return denied
     try:
@@ -1435,7 +1448,7 @@ def chat_assistant():
 @app.route('/api/assessments/submit', methods=['POST'])
 def submit_assessment():
     session = current_session()
-    if not session or session.get("user_type") not in ("child", "teacher", "admin"):
+    if not session or session.get("user_type") not in ("child", "teacher", "principal", "admin"):
         return jsonify({"message": "Unauthorized"}), 401
     """
     Save quiz/assessment results to student's profile
@@ -1446,6 +1459,8 @@ def submit_assessment():
     
     data = request.get_json()
     user_id = session.get("user_id") if session.get("user_type") == "child" else data.get('user_id')
+    if not can_view_student(db, session, str(user_id or "")):
+        return jsonify({"message": "Student not found"}), 404
     category = data.get('category')
     questions = data.get('questions')
     score = data.get('score')
@@ -1575,9 +1590,11 @@ def _open_teacher_quiz(user_id):
 
 @app.route("/api/teacher/assign-quiz", methods=["POST"])
 def assign_quiz():
-    denied = reject_unless("teacher", "admin")
+    denied = reject_unless("teacher", "principal", "admin")
     if denied:
         return denied
+    if not can_view_student(db, current_session(), str(json_body().get("user_id") or "")):
+        return jsonify({"message": "Student not found."}), 404
     if db is None:
         return jsonify({"message": "Database connection failed"}), 500
     data = request.get_json() or {}
@@ -1633,9 +1650,11 @@ def assign_quiz():
 
 @app.route("/api/teacher/quiz-assignments/<user_id>", methods=["GET"])
 def teacher_quiz_assignments(user_id):
-    denied = reject_unless("teacher", "admin")
+    denied = reject_unless("teacher", "principal", "admin")
     if denied:
         return denied
+    if not can_view_student(db, current_session(), user_id):
+        return jsonify({"message": "Student not found."}), 404
     if db is None:
         return jsonify({"message": "Database connection failed"}), 500
     docs = list(db.quiz_assignments.find({"user_id": str(user_id)}).sort("assigned_at", -1))
@@ -1762,7 +1781,7 @@ def mark_quiz_seen():
 # ====================================================================
 @app.route('/api/students', methods=['GET'])
 def get_students():
-    denied = reject_unless("teacher", "admin")
+    denied = reject_unless("teacher", "principal", "admin")
     if denied:
         return denied
     if db is None:
@@ -1771,7 +1790,7 @@ def get_students():
     try:
         # Get all users marked as 'child'
         students_cursor = db.users.find(
-            {"user_type": "child"},
+            visible_student_filter(db, current_session()),
             {"_id": 1, "first_name": 1, "last_name": 1, "age": 1, "grade": 1}
         )
         
@@ -1860,9 +1879,11 @@ def get_adaptive_questions(user_id):
 # ====================================================================
 @app.route('/api/recommendation/<user_id>', methods=['GET'])
 def recommend_quiz(user_id):
-    denied = reject_unless("teacher", "admin")
+    denied = reject_unless("teacher", "principal", "admin")
     if denied:
         return denied
+    if not can_view_student(db, current_session(), user_id):
+        return jsonify({"message": "Student not found"}), 404
     try:
         if not ObjectId.is_valid(user_id):
             return jsonify({"message": "Invalid ID"}), 400
@@ -1883,9 +1904,11 @@ def recommend_quiz(user_id):
 # ====================================================================
 @app.route('/api/quiz-analytics/<user_id>', methods=['GET'])
 def get_quiz_analytics(user_id):
-    denied = reject_unless("teacher", "admin")
+    denied = reject_unless("teacher", "principal", "admin")
     if denied:
         return denied
+    if not can_view_student(db, current_session(), user_id):
+        return jsonify({"message": "Student not found"}), 404
     if db is None: return jsonify({"message": "DB Error"}), 500
     if not ObjectId.is_valid(user_id): return jsonify({"message": "Invalid ID"}), 400
 
@@ -1983,11 +2006,13 @@ def get_quiz_analytics(user_id):
 @app.route('/api/verify-student-access', methods=['POST'])
 def verify_student_access():
     try:
-        denied = reject_unless("teacher", "admin")
+        denied = reject_unless("teacher", "principal", "admin")
         if denied:
             return denied
         data = json_body()
         user_id = clean_str(data.get('user_id'), 24)
+        if not can_view_student(db, current_session(), user_id or ""):
+            return jsonify({"success": False, "message": "User not found"}), 404
         input_password = str(data.get('password'))[:128].strip()
         if not user_id or not ObjectId.is_valid(user_id):
             return jsonify({"success": False, "message": "User not found"}), 404
@@ -2098,7 +2123,7 @@ def generate_ai_quiz(topic, difficulty):
 # ====================================================================
 @app.route('/api/generate-ai-quiz', methods=['POST'])
 def generate_custom_ai_quiz():
-    denied = reject_unless("teacher", "admin")
+    denied = reject_unless("teacher", "principal", "admin")
     if denied:
         return denied
     try:
@@ -2197,6 +2222,7 @@ def admin_delete_user(user_id):
 
         db.users.delete_one({"_id": ObjectId(user_id)})
         db.progress.delete_one({"_id": ObjectId(user_id)})
+        db.classes.update_many({"teacher_ids": str(user_id)}, {"$pull": {"teacher_ids": str(user_id)}})
         db.sessions.delete_many({"user_id": str(user_id)})
 
         return jsonify({"message": "User deleted successfully"}), 200
@@ -2255,6 +2281,8 @@ def get_lesson_access(user_id):
 
         global_rule = db.system.find_one({"_id": "global"})
         global_restricted = global_rule.get("restricted_lessons", []) if global_rule else []
+        school = db.schools.find_one({"_id": ObjectId(user["school_id"])}) if ObjectId.is_valid(str(user.get("school_id", ""))) else None
+        global_restricted = global_restricted + ((school or {}).get("restricted_lessons") or [])
 
         # 🔗 Merge (no duplicates)
         final_restricted = list(set(user_restricted + global_restricted))
@@ -2328,6 +2356,9 @@ def get_global_lesson_restrictions():
     except Exception as e:
         print("Error loading global restrictions:", e)
         return jsonify({"restricted_lessons": []}), 500
+
+# Schools, classes, principals (see schools.py)
+register_school_routes(app, sys.modules[__name__])
 
 # --- (Application Run - UNCHANGED) ---
 if __name__ == "__main__":

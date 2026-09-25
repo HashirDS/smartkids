@@ -18,6 +18,7 @@ const SECTION_IDS = Object.keys(NAV_THEMES);
 
 const dashboardFor = (userType) => {
   if (userType === 'admin') return '/admin-dashboard';
+  if (userType === 'principal') return '/school';
   if (userType === 'teacher') return '/teacher-dashboard';
   return '/child-dashboard';
 };

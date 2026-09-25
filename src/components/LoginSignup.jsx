@@ -68,6 +68,8 @@ const LoginSignup = () => {
     const handleRedirection = (userType) => {
         if (userType === 'admin') {
             navigate('/admin-dashboard');
+        } else if (userType === 'principal') {
+            navigate('/school');
         } else if (userType === 'teacher') {
             navigate('/teacher-dashboard');
         } else {

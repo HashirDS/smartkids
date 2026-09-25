@@ -66,7 +66,7 @@ Each module is built, tested (automated + clicked through), then pushed to the
   (`MONGO_DB_NAME=smart_tutor_staging`) so testing never touches real children's data.
 - `/api/health` endpoint for uptime checks.
 
-### M1 – Schools, classes, principals, teachers ⬜
+### M1 – Schools, classes, principals, teachers ✅
 - Data: `schools`, `classes` (name, level: Preschool/Nursery/Prep/KG1, code, teacher_ids, school_id);
   users get `school_id` and `class_ids`.
 - Admin console: Schools list → Add school (name, city, country) + principal account.
@@ -141,3 +141,4 @@ Features that need a key stay switched off until the key is added; nothing break
 |---|---|---|
 | 2026-09-25 | Landing, security, SEO, legal, Flags | Landing redesign, app navbars, Flags lesson, security hardening, SEO, legal pages, welcome popup removed |
 | 2026-09-25 | M0 | Backend test suite (pytest + mongomock), GitHub Actions CI (lint, build, tests), MONGO_DB_NAME for a separate staging database, /api/health, fixed conditional React hooks in the teacher dashboard |
+| 2026-09-25 | M1 | Schools, classes (Preschool/Nursery/Prep/KG1) with class codes, principal role and dashboard, admin Schools page, teacher My Classes tab, staff add students with parent details (login shown once), move students, reset passwords, school-level lesson access, all teacher/principal APIs scoped to their own classes/school, existing users moved into a Default school |

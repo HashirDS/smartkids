@@ -10,6 +10,7 @@ import './landing/landing.css';
 const THEMES = {
   student: { bg: '#FFD23F', light: false, label: null },
   teacher: { bg: '#1E88FF', light: true, label: 'Teacher' },
+  principal: { bg: '#2EC26A', light: true, label: 'Principal' },
   admin: { bg: '#8B5CF6', light: true, label: 'Admin' },
 };
 
