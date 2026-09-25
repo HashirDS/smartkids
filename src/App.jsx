@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 // Your existing components
 import Homepage from './components/Homepage.jsx';
@@ -9,7 +9,6 @@ import TeacherDashboard from './components/TeacherDashboard.jsx';
 import GeneralCharacter from './components/GeneralCharacter.jsx';
 import TeachingInterface from './components/TeachingInterface.jsx';
 import { Experience } from './components/Experience.jsx';
-import WelcomeMessage from './components/WelcomeMessage.jsx';
 import VoiceEnabledWrapper from './components/voice/VoiceEnabledWrapper.jsx';
 import PoemsLesson from './components/PoemsLesson.jsx';
 import DrawingBoard from './components/DrawingBoard.jsx';
@@ -37,19 +36,8 @@ function ProtectedRoute({ children, allow }) {
 }
 
 function App() {
-  const [showWelcome, setShowWelcome] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowWelcome(false);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <Router>
-      {showWelcome && <WelcomeMessage />}
-
       {/* WhatsApp button (landing page only) and cookie notice (public pages only) */}
       <WhatsAppButton />
       <CookieBanner />
