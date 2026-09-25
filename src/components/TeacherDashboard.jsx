@@ -58,8 +58,6 @@ const SpeechAnalyticsView = ({ student }) => {
     }
   };
 
-  if (!student) return null;
-
   // Prepare data for accuracy trend chart
   const accuracyTrendData = useMemo(() => {
     if (!speechData?.speech_history) return [];
@@ -87,6 +85,8 @@ const SpeechAnalyticsView = ({ student }) => {
       wordsCount: stats.words_count
     }));
   }, [speechData]);
+
+  if (!student) return null;
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mt-6 animate-fade-in">
@@ -237,14 +237,13 @@ const StatCard = ({ icon, title, value, color }) => (
 
 // --- StudentDetailView Component ---
 const StudentDetailView = ({ student }) => {
-  if (!student) return null;
-
   const studentCategoryData = useMemo(() => {
+    if (!student) return [];
     const totals = {};
     ALL_CATEGORIES.forEach(cat => totals[cat] = 0);
     if (student.completed_items && typeof student.completed_items === 'object') {
       for (const [category, items] of Object.entries(student.completed_items)) {
-        if (totals.hasOwnProperty(category) && Array.isArray(items)) {
+        if (Object.prototype.hasOwnProperty.call(totals, category) && Array.isArray(items)) {
           totals[category] = items.length;
         }
       }
@@ -257,6 +256,7 @@ const StudentDetailView = ({ student }) => {
   }, [student]);
 
   const completedLists = useMemo(() => {
+    if (!student) return [];
     return ALL_CATEGORIES
       .map(category => ({
         name: category.charAt(0).toUpperCase() + category.slice(1),
@@ -266,6 +266,7 @@ const StudentDetailView = ({ student }) => {
       .filter(category => category.items.length > 0);
   }, [student]);
 
+  if (!student) return null;
   return (
     <>
       <div className="lg:col-span-4 bg-white p-6 rounded-xl shadow-lg border border-gray-200 mt-6 animate-fade-in">
@@ -365,7 +366,7 @@ const InteractiveProgressDashboard = () => {
     allProgressData.forEach(student => {
       if (student.completed_items) {
         for (const [category, items] of Object.entries(student.completed_items)) {
-          if (totals.hasOwnProperty(category) && Array.isArray(items)) {
+          if (Object.prototype.hasOwnProperty.call(totals, category) && Array.isArray(items)) {
             totals[category] += items.length;
           }
         }
@@ -397,7 +398,7 @@ const InteractiveProgressDashboard = () => {
       allProgressData.forEach(student => {
         if (student.completed_items) {
           for (const [category, items] of Object.entries(student.completed_items)) {
-            if (classTotals.hasOwnProperty(category) && Array.isArray(items)) {
+            if (Object.prototype.hasOwnProperty.call(classTotals, category) && Array.isArray(items)) {
               classTotals[category] += items.length;
             }
           }
