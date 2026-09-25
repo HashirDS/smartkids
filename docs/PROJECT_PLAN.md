@@ -126,11 +126,14 @@ Each module is built, tested (automated + clicked through), then pushed to the
 - Badges are worked out from existing progress, so older accounts get the badges they already deserve.
 - Also: Urdu/Arabic tutor voice now falls back to the free Google voice (gTTS) when the Azure key is missing or fails.
 
-### M6 – Analytics, error monitoring, uptime ⬜
-- Privacy-friendly, cookie-free page analytics (Vercel Web Analytics), only after consent on public pages,
-  never on children's lesson screens.
-- Error monitoring with Sentry (frontend + backend), no children's personal data sent.
-- Uptime alerts (UptimeRobot on `/api/health`).
+### M6 – Analytics, error monitoring, uptime ✅
+- Vercel Web Analytics (cookie-free): live site only, only after "Accept" on the cookie notice, public pages
+  only (never lessons, dashboards or the parent page), class codes stripped from `/join` links.
+- Sentry error alerts for the website (loaded only when `VITE_SENTRY_DSN` is set) and the server (`SENTRY_DSN`);
+  errors only, and names, emails, logins, tokens, cookies, bodies and queries are removed before sending.
+- `/api/health` (GET/HEAD) for UptimeRobot, with database check, version and environment.
+- Admin dashboard **System status** card: database, error alerts, weekly email, schedule, Azure voice (on/off only).
+- Cookie notice and Cookie Policy updated. Setup steps: `docs/MONITORING.md`.
 
 ### M7 – Child-safety compliance (ages 3–6) ⬜
 - Parental consent step on every child account; data export/delete on request.
@@ -173,3 +176,4 @@ Features that need a key stay switched off until the key is added; nothing break
 | 2026-09-25 | M3 | English/Urdu/Arabic switch with right-to-left layout for students and parents, Urdu alphabet and Arabic Qaida lessons with Azure Urdu/Arabic voices, Urdu and Arabic quizzes, new lessons linked to menus, voice, progress, charts, restrictions and parent reports |
 | 2026-09-25 | M4 | Islamic Studies (pending scholar review), Science and Animals lessons with quizzes, linked everywhere; friendly lesson names in quiz recommendations |
 | 2026-09-25 | M5 | Stickers, streaks and 21 badges on student home, sticker book, parent page and weekly email; Urdu/Arabic voice fallback to gTTS; pop-up backdrop fix |
+| 2026-09-25 | M6 | Consent-based cookie-free analytics on public pages, Sentry for website and server with data scrubbing, health check with version, admin System status card, monitoring guide |

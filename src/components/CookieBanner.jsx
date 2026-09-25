@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-
-const KEY = 'ai_tutor_cookie_consent';
-const PUBLIC_PATHS = ['/', '/login', '/try-classroom', '/privacy', '/terms', '/cookies', '/join'];
+import { CONSENT_KEY as KEY, PUBLIC_PATHS, enableAnalytics } from '../monitoring';
 
 const readChoice = () => {
   try {
@@ -12,8 +10,8 @@ const readChoice = () => {
   }
 };
 
-// Small notice on public pages. The site only uses essential storage today,
-// so both choices keep it working; the choice is saved for any future optional cookies.
+// Small notice on public pages. "Accept" also turns on cookie-free visitor statistics for
+// public pages; "Essential only" keeps just what the site needs to work.
 const CookieBanner = () => {
   const { pathname } = useLocation();
   const [choice, setChoice] = useState(readChoice);
@@ -27,6 +25,7 @@ const CookieBanner = () => {
       // Storage blocked: just hide the notice for this visit.
     }
     setChoice(value);
+    if (value === 'all') enableAnalytics();
   };
 
   return (
@@ -36,8 +35,8 @@ const CookieBanner = () => {
       className="fixed bottom-4 left-4 right-20 z-50 max-w-md rounded-2xl bg-white p-4 text-sm text-[#4A5578] shadow-[0_6px_0_rgba(30,42,85,0.15),0_12px_30px_rgba(30,42,85,0.18)] sm:right-auto"
     >
       <p className="font-semibold">
-        We use only essential cookies and browser storage to keep you signed in and remember your
-        settings. No ads or tracking.{' '}
+        We use essential browser storage to keep you signed in. With your OK, we also count visits to
+        our public pages (no cookies, no ads, never on children's lessons).{' '}
         <Link to="/cookies" className="font-bold text-[#1E88FF] hover:underline">Cookie Policy</Link>
       </p>
       <div className="mt-3 flex gap-2">

@@ -7,3 +7,4 @@ validators
 requests
 groq
 gtts
+sentry-sdk[flask]
