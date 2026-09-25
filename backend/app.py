@@ -391,7 +391,7 @@ def register_user():
             "child_name": f"{first_name} {last_name}",
             "completed_items": {
                 "abc": [], "numbers": [], "shapes": [],
-                "colors": [], "poems": [], "fruits": [], "flags": []
+                "colors": [], "poems": [], "fruits": [], "flags": [], "urdu": [], "arabic": []
             },
             "total_score": 0, "last_activity": None
         }
@@ -581,7 +581,7 @@ def mark_item_complete():
     if not ObjectId.is_valid(user_id):
         return jsonify({"message": "Invalid user ID"}), 400
 
-    valid_categories = ["abc", "numbers", "shapes", "colors", "poems", "fruits", "flags"]
+    valid_categories = ["abc", "numbers", "shapes", "colors", "poems", "fruits", "flags", "urdu", "arabic"]
     if category not in valid_categories:
         print(f"Invalid category received: {category}")
         return jsonify({"message": f"Invalid category: {category}"}), 400
@@ -768,6 +768,9 @@ def ask_ai():
 # -----------------------------------------------------
 # --- /api/tts Route (Azure TTS with SSML for speed) ---
 # -----------------------------------------------------
+TTS_VOICES = {"ur": ("ur-PK", "ur-PK-UzmaNeural"), "ar": ("ar-SA", "ar-SA-ZariyahNeural")}
+TTS_MALE_VOICES = {"ur": "ur-PK-AsadNeural", "ar": "ar-SA-HamedNeural"}
+
 @app.route('/api/tts', methods=['GET'])
 def get_tts():
     if not SPEECH_KEY or not SPEECH_REGION:
@@ -790,11 +793,18 @@ def get_tts():
     else:
         voice_name = "en-US-JennyNeural"
 
+    # Urdu and Arabic lessons/UI: same female/male choice in that language.
+    tts_lang = request.args.get("lang", "en")
+    ssml_lang, voice_name = TTS_VOICES.get(tts_lang, ("en-US", voice_name))
+    if tts_lang in TTS_VOICES and teacher == "male":
+        voice_name = TTS_MALE_VOICES[tts_lang]
+
     # Without the Azure Speech SDK (kept out of the Vercel bundle for size),
     # use the Azure TTS REST API: same voices, but no lip-sync visemes.
     if speechsdk is None:
         ssml = (
-            '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">'
+            '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" '
+            f'xml:lang="{ssml_lang}">'
             f'<voice name="{voice_name}"><prosody rate="-20.0%">{text}</prosody></voice></speak>'
         )
         try:
@@ -851,7 +861,7 @@ def get_tts():
         ssml_string = f"""
         <speak version="1.0"
                xmlns="http://www.w3.org/2001/10/synthesis"
-               xml:lang="en-US">
+               xml:lang="{ssml_lang}">
             <voice name="{voice_name}">
                 <prosody rate="-20.0%">
                     {text}
@@ -924,7 +934,7 @@ def analyze_speech():
         # Points always go to the logged-in child; the user_id field sent by the browser is ignored.
         user_id = session.get("user_id") if session.get("user_type") == "child" else None
         lesson_type = request.form.get("lesson_type", "colors")
-        if lesson_type not in ("abc", "numbers", "shapes", "colors", "fruits", "poems", "flags", "drawing"):
+        if lesson_type not in ("abc", "numbers", "shapes", "colors", "fruits", "poems", "flags", "urdu", "arabic", "drawing"):
             lesson_type = "other"
 
         # Validate
@@ -1545,7 +1555,7 @@ def submit_assessment():
 
 
 
-QUIZ_CATEGORIES = ["abc", "numbers", "shapes", "colors", "fruits", "flags"]
+QUIZ_CATEGORIES = ["abc", "numbers", "shapes", "colors", "fruits", "flags", "urdu", "arabic"]
 
 def _lesson_count(user_id, category):
     if not ObjectId.is_valid(str(user_id)):
@@ -1824,7 +1834,7 @@ def get_adaptive_questions(user_id):
        
         history = user.get('quiz_history', [])
        
-        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'flags', 'veg', 'animals', 'body', 'days']
+        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'flags', 'urdu', 'arabic', 'veg', 'animals', 'body', 'days']
 
         # ⭐ DEFINE MANDATORY BASICS ⭐
         core_topics = ['abc', 'numbers']
@@ -1933,7 +1943,7 @@ def get_quiz_analytics(user_id):
             if '_id' in q_copy: q_copy['_id'] = str(q_copy['_id'])
             clean_history.append(q_copy)
         
-        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'flags', 'veg', 'animals', 'body', 'days']
+        all_categories = ['abc', 'numbers', 'colors', 'shapes', 'fruits', 'flags', 'urdu', 'arabic', 'veg', 'animals', 'body', 'days']
         category_stats = {cat: {'attempts': 0, 'total_score': 0, 'total_percentage': 0, 'avg_score': 0, 'avg_percentage': 0} for cat in all_categories}
 
         for quiz in clean_history:

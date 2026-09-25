@@ -8,6 +8,8 @@ const LABELS = {
   colors: 'Colors',
   fruits: 'Fruits',
   flags: 'Flags',
+  urdu: 'Urdu Alphabet',
+  arabic: 'Arabic Qaida',
 };
 
 const formatWhen = (value) => {

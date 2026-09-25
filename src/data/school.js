@@ -17,5 +17,7 @@ export const LESSONS = [
   { key: 'drawing', label: 'Drawing' },
   { key: 'poems', label: 'Poems' },
   { key: 'flags', label: 'Flags' },
+  { key: 'urdu', label: 'Urdu Alphabet' },
+  { key: 'arabic', label: 'Arabic Qaida' },
   { key: 'quiz', label: 'Quiz' },
 ];

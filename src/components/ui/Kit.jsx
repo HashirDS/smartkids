@@ -143,9 +143,11 @@ export const EmptyState = ({ title, text, action }) => (
 );
 
 // Shows a login (username + password) once, with copy and print.
-export const LoginCard = ({ title, name, login, note }) => {
+// `labels` lets parent pages show Login / Password / Copy / Print in Urdu or Arabic.
+export const LoginCard = ({ title, name, login, note, labels = {} }) => {
+  const L = { login: 'Login', password: 'Password', copy: 'Copy', copied: 'Copied!', print: 'Print', ...labels };
   const [copied, setCopied] = useState(false);
-  const text = `${name ? `${name}\n` : ''}Login: ${login.username}\nPassword: ${login.password}`;
+  const text = `${name ? `${name}\n` : ''}${L.login}: ${login.username}\n${L.password}: ${login.password}`;
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(text);
@@ -159,13 +161,13 @@ export const LoginCard = ({ title, name, login, note }) => {
       <p className="landing-display text-lg font-bold text-[#1E2A55]">{title}</p>
       {name && <p className="font-bold text-[#4A5578]">{name}</p>}
       <dl className="mt-3 space-y-1 font-mono text-sm text-[#1E2A55]">
-        <div><dt className="inline font-sans font-bold">Login: </dt><dd className="inline select-all">{login.username}</dd></div>
-        <div><dt className="inline font-sans font-bold">Password: </dt><dd className="inline select-all">{login.password}</dd></div>
+        <div><dt className="inline font-sans font-bold">{L.login}: </dt><dd className="inline select-all" dir="ltr">{login.username}</dd></div>
+        <div><dt className="inline font-sans font-bold">{L.password}: </dt><dd className="inline select-all" dir="ltr">{login.password}</dd></div>
       </dl>
       <p className="mt-3 text-xs font-bold text-[#A3202F]">{note || 'This password is shown only once. Copy or print it now.'}</p>
       <div className="mt-3 flex gap-2">
-        <Button variant="blue" onClick={copy}>{copied ? 'Copied!' : 'Copy'}</Button>
-        <Button variant="light" onClick={() => window.print()}>Print</Button>
+        <Button variant="blue" onClick={copy}>{copied ? L.copied : L.copy}</Button>
+        <Button variant="light" onClick={() => window.print()}>{L.print}</Button>
       </div>
     </div>
   );

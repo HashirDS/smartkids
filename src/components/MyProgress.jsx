@@ -35,6 +35,8 @@ const CATEGORIES = [
   { key: 'poems', label: 'Poems', color: '#8dd1e1' },
   { key: 'fruits', label: 'Fruits', color: '#d0ed57' },
   { key: 'flags', label: 'Flags', color: '#14b8a6' },
+  { key: 'urdu', label: 'Urdu', color: '#1E88FF' },
+  { key: 'arabic', label: 'Arabic Qaida', color: '#2EC26A' },
 ];
 
 const MyProgress = () => {

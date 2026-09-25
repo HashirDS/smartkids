@@ -31,6 +31,12 @@ const VoiceEnabledWrapper = ({ children }) => {
       case "flags":
         navigate("/flags-lesson");
         break;
+      case "urdu":
+        navigate("/urdu-lesson");
+        break;
+      case "arabic":
+        navigate("/arabic-lesson");
+        break;
       case "teacher":
         navigate("/teacher-dashboard");
         break;

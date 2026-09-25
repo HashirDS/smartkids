@@ -21,6 +21,8 @@ const VoiceController = ({ onCommand }) => {
 
             if (last.includes("drawing")) onCommand("drawing");
             else if (last.includes("poem")) onCommand("poems");
+            else if (last.includes("urdu")) onCommand("urdu");
+            else if (last.includes("arabic") || last.includes("qaida") || last.includes("qaeda")) onCommand("arabic");
             else if (last.includes("abc") || last.includes("alphabets")) onCommand("abc");
             else if (last.includes("number")) onCommand("numbers");
             else if (last.includes("shape")) onCommand("shapes");

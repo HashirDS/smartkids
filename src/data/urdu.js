@@ -1,0 +1,45 @@
+// Urdu alphabet (حروفِ تہجی) for the Urdu lesson and quiz.
+// `name` is how the letter is said; `word` is a picture word (ڑ and ے never start a word, so their word ends with them).
+// Progress is saved with the letter itself as the item.
+export const URDU_LETTERS = [
+  { letter: 'ا', name: 'الف', word: 'انڈا', meaning: 'egg', emoji: '🥚' },
+  { letter: 'آ', name: 'الف مدّ', word: 'آم', meaning: 'mango', emoji: '🥭' },
+  { letter: 'ب', name: 'بے', word: 'بلی', meaning: 'cat', emoji: '🐱' },
+  { letter: 'پ', name: 'پے', word: 'پتنگ', meaning: 'kite', emoji: '🪁' },
+  { letter: 'ت', name: 'تے', word: 'تتلی', meaning: 'butterfly', emoji: '🦋' },
+  { letter: 'ٹ', name: 'ٹے', word: 'ٹماٹر', meaning: 'tomato', emoji: '🍅' },
+  { letter: 'ث', name: 'ثے', word: 'ثمر', meaning: 'fruit', emoji: '🍇' },
+  { letter: 'ج', name: 'جیم', word: 'جہاز', meaning: 'aeroplane', emoji: '✈️' },
+  { letter: 'چ', name: 'چے', word: 'چڑیا', meaning: 'sparrow', emoji: '🐦' },
+  { letter: 'ح', name: 'بڑی حے', word: 'حلوہ', meaning: 'halwa', emoji: '🍮' },
+  { letter: 'خ', name: 'خے', word: 'خرگوش', meaning: 'rabbit', emoji: '🐰' },
+  { letter: 'د', name: 'دال', word: 'دودھ', meaning: 'milk', emoji: '🥛' },
+  { letter: 'ڈ', name: 'ڈال', word: 'ڈھول', meaning: 'drum', emoji: '🥁' },
+  { letter: 'ذ', name: 'ذال', word: 'ذائقہ', meaning: 'taste', emoji: '👅' },
+  { letter: 'ر', name: 'رے', word: 'ریل', meaning: 'train', emoji: '🚂' },
+  { letter: 'ڑ', name: 'ڑے', word: 'پہاڑ', meaning: 'mountain', emoji: '⛰️', ends: true },
+  { letter: 'ز', name: 'زے', word: 'زرافہ', meaning: 'giraffe', emoji: '🦒' },
+  { letter: 'ژ', name: 'ژے', word: 'ژالہ', meaning: 'hail', emoji: '🌨️' },
+  { letter: 'س', name: 'سین', word: 'سیب', meaning: 'apple', emoji: '🍎' },
+  { letter: 'ش', name: 'شین', word: 'شیر', meaning: 'lion', emoji: '🦁' },
+  { letter: 'ص', name: 'صاد', word: 'صابن', meaning: 'soap', emoji: '🧼' },
+  { letter: 'ض', name: 'ضاد', word: 'ضیا', meaning: 'light', emoji: '💡' },
+  { letter: 'ط', name: 'طوئے', word: 'طوطا', meaning: 'parrot', emoji: '🦜' },
+  { letter: 'ظ', name: 'ظوئے', word: 'ظرف', meaning: 'bowl', emoji: '🥣' },
+  { letter: 'ع', name: 'عین', word: 'عینک', meaning: 'glasses', emoji: '👓' },
+  { letter: 'غ', name: 'غین', word: 'غبارہ', meaning: 'balloon', emoji: '🎈' },
+  { letter: 'ف', name: 'فے', word: 'فٹ بال', meaning: 'football', emoji: '⚽' },
+  { letter: 'ق', name: 'قاف', word: 'قلم', meaning: 'pen', emoji: '🖊️' },
+  { letter: 'ک', name: 'کاف', word: 'کتاب', meaning: 'book', emoji: '📖' },
+  { letter: 'گ', name: 'گاف', word: 'گاجر', meaning: 'carrot', emoji: '🥕' },
+  { letter: 'ل', name: 'لام', word: 'لیموں', meaning: 'lemon', emoji: '🍋' },
+  { letter: 'م', name: 'میم', word: 'مچھلی', meaning: 'fish', emoji: '🐟' },
+  { letter: 'ن', name: 'نون', word: 'ناریل', meaning: 'coconut', emoji: '🥥' },
+  { letter: 'و', name: 'واؤ', word: 'وقت', meaning: 'time', emoji: '⏰' },
+  { letter: 'ہ', name: 'ہے', word: 'ہاتھی', meaning: 'elephant', emoji: '🐘' },
+  { letter: 'ی', name: 'چھوٹی یے', word: 'یخ', meaning: 'ice', emoji: '🧊' },
+  { letter: 'ے', name: 'بڑی یے', word: 'کیلے', meaning: 'bananas', emoji: '🍌', ends: true },
+];
+
+// What the tutor says: "بے سے بلی" (B for cat), like "A for Apple".
+export const urduPhrase = (l) => (l.ends ? `${l.name}، ${l.word}` : `${l.name} سے ${l.word}`);

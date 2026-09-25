@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap');
 
 /* Everything here is scoped to the public landing page (.landing). */
 .landing {
@@ -11,6 +11,17 @@
   font-family: 'Fredoka', 'Nunito', system-ui, sans-serif;
   letter-spacing: 0.01em;
 }
+
+/* Urdu and Arabic: Latin text keeps Fredoka/Nunito (they have no Arabic letters),
+   so the browser uses Noto Nastaliq Urdu / Noto Naskh Arabic only for Urdu and Arabic text. */
+.landing:lang(ur) { font-family: 'Nunito', 'Noto Nastaliq Urdu', system-ui, sans-serif; }
+.landing-display:lang(ur) { font-family: 'Fredoka', 'Noto Nastaliq Urdu', system-ui, sans-serif; letter-spacing: 0; }
+.landing:lang(ar) { font-family: 'Nunito', 'Noto Naskh Arabic', system-ui, sans-serif; }
+.landing-display:lang(ar) { font-family: 'Fredoka', 'Noto Naskh Arabic', system-ui, sans-serif; letter-spacing: 0; }
+[dir='rtl']:lang(ur) { line-height: 1.9; }
+.landing-display:lang(ur) { line-height: 1.75; }
+.font-urdu { font-family: 'Noto Nastaliq Urdu', serif; }
+.font-arabic { font-family: 'Noto Naskh Arabic', serif; }
 
 /* Chunky cartoon heading: white letters with a dark outline and drop */
 .landing-outline {
