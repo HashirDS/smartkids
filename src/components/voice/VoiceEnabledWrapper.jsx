@@ -28,6 +28,9 @@ const VoiceEnabledWrapper = ({ children }) => {
       case "colors":
         navigate("/colors-lesson");
         break;
+      case "flags":
+        navigate("/flags-lesson");
+        break;
       case "teacher":
         navigate("/teacher-dashboard");
         break;
